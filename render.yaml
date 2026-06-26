@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: calculadora-experimental
+    runtime: static
+    buildCommand: npm install && npx expo export --platform web
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
