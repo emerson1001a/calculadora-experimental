@@ -4,15 +4,21 @@ import type { EntradaFrete, ResultadoFrete, CustoDetalhado } from '../types';
 const ANTT_PISO_POR_KM = 3.2;
 
 export function calcularFrete(entrada: EntradaFrete): ResultadoFrete {
-  const { distanciaKm, valorFrete, voltaVazia, margemDesejada, custos } = entrada;
+  const { distanciaKm, valorFrete, tipoRetorno, margemDesejada, custos } = entrada;
 
-  // Na volta vazia os custos variáveis (km) dobram, pedágio também
-  const fatorKm = voltaVazia ? 2 : 1;
+  // Com qualquer tipo de retorno os custos variáveis (km) dobram
+  const temRetorno = tipoRetorno !== 'nenhum';
+  const fatorKm = temRetorno ? 2 : 1;
   const distanciaTotal = distanciaKm * fatorKm;
 
   const diesel = (custos.dieselPrecoPorLitro / custos.dieselKmPorLt) * distanciaTotal;
   const arla = (custos.arlaPrecoPorLitro / custos.arlaKmPorLt) * distanciaTotal;
-  const pedagio = custos.pedagio * fatorKm;
+  // Volta vazia: pedagio volta = mesma da ida. Com carga: pedagio volta editável.
+  const pedagio = !temRetorno
+    ? custos.pedagio
+    : tipoRetorno === 'vazio'
+    ? custos.pedagio * 2
+    : custos.pedagio + custos.pedagioVolta;
   const alimentacao = custos.alimentacao;
   const pernoite = custos.pernoite;
   const manutencao = custos.manutencaoPorKm * distanciaTotal;

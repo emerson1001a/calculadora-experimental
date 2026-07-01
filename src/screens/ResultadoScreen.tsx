@@ -64,7 +64,8 @@ function LinhaDetalhe({ label, valor, destaque }: LinhaDetalheProps) {
 export function ResultadoScreen({ resultado, onVoltar }: Props) {
   const { entrada, custoTotal, custoDetalhado, lucro, margemReal, pisoANTT, abaixoPisoANTT, veredicto } = resultado;
   const cfg = VEREDICTO_CONFIG[veredicto];
-  const distTotal = entrada.distanciaKm * (entrada.voltaVazia ? 2 : 1);
+  const temRetorno = entrada.tipoRetorno !== 'nenhum';
+  const distTotal = entrada.distanciaKm * (temRetorno ? 2 : 1);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -78,7 +79,7 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
             {entrada.origem} → {entrada.destino}
           </Text>
           <Text style={styles.rotaKm}>
-            {entrada.distanciaKm} km{entrada.voltaVazia ? ' + volta vazia' : ''}
+            {entrada.distanciaKm} km{entrada.tipoRetorno === 'vazio' ? ' + volta vazia' : entrada.tipoRetorno === 'comCarga' ? ' + com retorno' : ''}
             {' · '}distância total: {distTotal} km
           </Text>
         </View>

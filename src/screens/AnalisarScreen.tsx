@@ -3,7 +3,6 @@ import {
   View,
   Text,
   ScrollView,
-  Switch,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
@@ -16,7 +15,7 @@ import { CustoRow } from '../components/CustoRow';
 import { calcularFrete } from '../engine/calcularFrete';
 import { colors } from '../theme/colors';
 import { parseNumber } from '../utils/format';
-import type { ResultadoFrete } from '../types';
+import type { ResultadoFrete, TipoRetorno } from '../types';
 
 interface Props {
   onCalcular: (resultado: ResultadoFrete) => void;
@@ -28,6 +27,7 @@ const CUSTOS_PADRAO = {
   arlaKmPorLt: '70',
   arlaPrecoPorLitro: '4.50',
   pedagio: '150',
+  pedagioVolta: '150',
   alimentacao: '60',
   pernoite: '80',
   manutencaoPorKm: '0.15',
@@ -40,7 +40,7 @@ export function AnalisarScreen({ onCalcular }: Props) {
   const [destino, setDestino] = useState('');
   const [distancia, setDistancia] = useState('');
   const [valorFrete, setValorFrete] = useState('');
-  const [voltaVazia, setVoltaVazia] = useState(false);
+  const [tipoRetorno, setTipoRetorno] = useState<TipoRetorno>('nenhum');
   const [margem, setMargem] = useState('15');
   const [custosAberto, setCustosAberto] = useState(false);
   const [custos, setCustos] = useState(CUSTOS_PADRAO);
@@ -67,7 +67,7 @@ export function AnalisarScreen({ onCalcular }: Props) {
       destino: destino.trim() || 'Destino',
       distanciaKm: dist,
       valorFrete: valor,
-      voltaVazia,
+      tipoRetorno,
       margemDesejada: parseNumber(margem),
       custos: {
         dieselKmPorLt: parseNumber(custos.dieselKmPorLt),
@@ -75,6 +75,7 @@ export function AnalisarScreen({ onCalcular }: Props) {
         arlaKmPorLt: parseNumber(custos.arlaKmPorLt),
         arlaPrecoPorLitro: parseNumber(custos.arlaPrecoPorLitro),
         pedagio: parseNumber(custos.pedagio),
+        pedagioVolta: parseNumber(custos.pedagioVolta),
         alimentacao: parseNumber(custos.alimentacao),
         pernoite: parseNumber(custos.pernoite),
         manutencaoPorKm: parseNumber(custos.manutencaoPorKm),
@@ -146,17 +147,30 @@ export function AnalisarScreen({ onCalcular }: Props) {
               keyboardType="decimal-pad"
               suffix="%"
             />
-            <View style={styles.switchRow}>
-              <View>
-                <Text style={styles.switchLabel}>Volta Vazia</Text>
-                <Text style={styles.switchHint}>Retorno sem carga</Text>
+            <View style={styles.retornoRow}>
+              <Text style={styles.retornoLabel}>Tipo de viagem</Text>
+              <View style={styles.retornoSegment}>
+                {(['nenhum', 'vazio', 'comCarga'] as TipoRetorno[]).map((opcao) => {
+                  const labels: Record<TipoRetorno, string> = {
+                    nenhum: 'Só ida',
+                    vazio: 'Volta vazia',
+                    comCarga: 'Com retorno',
+                  };
+                  const ativo = tipoRetorno === opcao;
+                  return (
+                    <TouchableOpacity
+                      key={opcao}
+                      style={[styles.retornoOpcao, ativo && styles.retornoOpcaoAtiva]}
+                      onPress={() => setTipoRetorno(opcao)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.retornoOpcaoTexto, ativo && styles.retornoOpcaoTextoAtivo]}>
+                        {labels[opcao]}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
-              <Switch
-                value={voltaVazia}
-                onValueChange={setVoltaVazia}
-                trackColor={{ false: colors.border, true: colors.primaryDark }}
-                thumbColor={voltaVazia ? colors.primary : colors.textSecondary}
-              />
             </View>
           </View>
 
@@ -209,6 +223,14 @@ export function AnalisarScreen({ onCalcular }: Props) {
                   onChangeText={v => setCusto('pedagio', v)}
                   unit="R$"
                 />
+                {tipoRetorno === 'comCarga' && (
+                  <CustoRow
+                    label="Pedágio (volta)"
+                    value={custos.pedagioVolta}
+                    onChangeText={v => setCusto('pedagioVolta', v)}
+                    unit="R$"
+                  />
+                )}
                 <CustoRow
                   label="Alimentação"
                   value={custos.alimentacao}
@@ -326,22 +348,41 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 4,
   },
-  switchRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    marginTop: 4,
+  retornoRow: {
+    marginTop: 8,
   },
-  switchLabel: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  switchHint: {
-    color: colors.textMuted,
+  retornoLabel: {
+    color: colors.textSecondary,
     fontSize: 12,
-    marginTop: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  retornoSegment: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  retornoOpcao: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceElevated,
+    alignItems: 'center',
+  },
+  retornoOpcaoAtiva: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryDark,
+  },
+  retornoOpcaoTexto: {
+    color: colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  retornoOpcaoTextoAtivo: {
+    color: colors.white,
   },
   btnCalcular: {
     backgroundColor: colors.primary,

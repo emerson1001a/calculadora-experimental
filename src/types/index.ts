@@ -1,9 +1,12 @@
+export type TipoRetorno = 'nenhum' | 'vazio' | 'comCarga';
+
 export interface Custos {
   dieselKmPorLt: number;
   dieselPrecoPorLitro: number;
   arlaKmPorLt: number;
   arlaPrecoPorLitro: number;
   pedagio: number;
+  pedagioVolta: number;
   alimentacao: number;
   pernoite: number;
   manutencaoPorKm: number;
@@ -16,7 +19,7 @@ export interface EntradaFrete {
   destino: string;
   distanciaKm: number;
   valorFrete: number;
-  voltaVazia: boolean;
+  tipoRetorno: TipoRetorno;
   margemDesejada: number;
   custos: Custos;
 }
