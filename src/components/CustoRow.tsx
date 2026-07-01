@@ -15,7 +15,7 @@ export function CustoRow({ label, value, onChangeText, unit }: CustoRowProps) {
       <Text style={styles.label} numberOfLines={1}>{label}</Text>
       <View style={styles.inputWrap}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { outlineWidth: 0 } as object]}
           value={value}
           onChangeText={onChangeText}
           keyboardType="decimal-pad"
@@ -52,12 +52,12 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     paddingHorizontal: 8,
     height: 36,
-    minWidth: 100,
+    width: 90,
   },
   input: {
     color: colors.text,
     fontSize: 14,
-    minWidth: 56,
+    flex: 1,
     textAlign: 'right',
   },
   unit: {
