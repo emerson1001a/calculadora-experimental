@@ -15,10 +15,11 @@ import { CustoRow } from '../components/CustoRow';
 import { calcularFrete } from '../engine/calcularFrete';
 import { colors } from '../theme/colors';
 import { parseNumber } from '../utils/format';
-import type { ResultadoFrete, TipoRetorno } from '../types';
+import type { EntradaFrete, ResultadoFrete, TipoRetorno } from '../types';
 
 interface Props {
   onCalcular: (resultado: ResultadoFrete) => void;
+  initialValues?: EntradaFrete | null;
 }
 
 const CUSTOS_PADRAO = {
@@ -35,15 +36,27 @@ const CUSTOS_PADRAO = {
   depreciacaoPorKm: '0.20',
 };
 
-export function AnalisarScreen({ onCalcular }: Props) {
-  const [origem, setOrigem] = useState('');
-  const [destino, setDestino] = useState('');
-  const [distancia, setDistancia] = useState('');
+export function AnalisarScreen({ onCalcular, initialValues: iv }: Props) {
+  const [origem, setOrigem] = useState(iv?.origem ?? '');
+  const [destino, setDestino] = useState(iv?.destino ?? '');
+  const [distancia, setDistancia] = useState(iv ? String(iv.distanciaKm) : '');
   const [valorFrete, setValorFrete] = useState('');
-  const [tipoRetorno, setTipoRetorno] = useState<TipoRetorno>('nenhum');
-  const [margem, setMargem] = useState('15');
-  const [custosAberto, setCustosAberto] = useState(false);
-  const [custos, setCustos] = useState(CUSTOS_PADRAO);
+  const [tipoRetorno, setTipoRetorno] = useState<TipoRetorno>(iv?.tipoRetorno ?? 'nenhum');
+  const [margem, setMargem] = useState(iv ? String(iv.margemDesejada) : '15');
+  const [custosAberto, setCustosAberto] = useState(!!iv);
+  const [custos, setCustos] = useState(iv ? {
+    dieselKmPorLt: String(iv.custos.dieselKmPorLt),
+    dieselPrecoPorLitro: String(iv.custos.dieselPrecoPorLitro),
+    arlaKmPorLt: String(iv.custos.arlaKmPorLt),
+    arlaPrecoPorLitro: String(iv.custos.arlaPrecoPorLitro),
+    pedagio: String(iv.custos.pedagio),
+    pedagioVolta: String(iv.custos.pedagio),
+    alimentacao: String(iv.custos.alimentacao),
+    pernoite: String(iv.custos.pernoite),
+    manutencaoPorKm: String(iv.custos.manutencaoPorKm),
+    pneusPorKm: String(iv.custos.pneusPorKm),
+    depreciacaoPorKm: String(iv.custos.depreciacaoPorKm),
+  } : CUSTOS_PADRAO);
 
   function setCusto(campo: keyof typeof CUSTOS_PADRAO, valor: string) {
     setCustos(prev => ({ ...prev, [campo]: valor }));
@@ -103,6 +116,13 @@ export function AnalisarScreen({ onCalcular }: Props) {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
+          {iv && (
+            <View style={styles.simulacaoBanner}>
+              <Text style={styles.simulacaoTexto}>
+                Dados da ida mantidos. Informe o valor do frete de volta e confira o pedágio da volta.
+              </Text>
+            </View>
+          )}
           {/* ROTA */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Rota</Text>
@@ -331,6 +351,18 @@ const styles = StyleSheet.create({
   expandIcon: {
     color: colors.primary,
     fontSize: 12,
+  },
+  simulacaoBanner: {
+    backgroundColor: colors.warningBg,
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.warning,
+  },
+  simulacaoTexto: {
+    color: colors.warning,
+    fontSize: 13,
+    lineHeight: 18,
   },
   custosHint: {
     color: colors.textMuted,

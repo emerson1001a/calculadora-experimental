@@ -16,6 +16,7 @@ import { GraficoPizza } from '../components/GraficoPizza';
 interface Props {
   resultado: ResultadoFrete;
   onVoltar: () => void;
+  onSimularRetorno?: () => void;
 }
 
 const VEREDICTO_CONFIG = {
@@ -61,7 +62,7 @@ function LinhaDetalhe({ label, valor, destaque }: LinhaDetalheProps) {
   );
 }
 
-export function ResultadoScreen({ resultado, onVoltar }: Props) {
+export function ResultadoScreen({ resultado, onVoltar, onSimularRetorno }: Props) {
   const { entrada, custoTotal, custoDetalhado, lucro, margemReal, pisoANTT, abaixoPisoANTT, veredicto } = resultado;
   const cfg = VEREDICTO_CONFIG[veredicto];
   const temRetorno = entrada.tipoRetorno !== 'nenhum';
@@ -200,6 +201,12 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
           <View style={styles.totalSeparator} />
           <LinhaDetalhe label="CUSTO TOTAL" valor={custoTotal} destaque />
         </View>
+
+        {onSimularRetorno && entrada.tipoRetorno === 'vazio' && (
+          <TouchableOpacity style={styles.btnSimular} onPress={onSimularRetorno} activeOpacity={0.85}>
+            <Text style={styles.btnSimularText}>E se eu pegar frete de volta?</Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity style={styles.btnVoltar} onPress={onVoltar} activeOpacity={0.85}>
           <Text style={styles.btnVoltarText}>NOVA ANÁLISE</Text>
@@ -417,7 +424,21 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
 
-  // Botão
+  // Botões
+  btnSimular: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginTop: 4,
+  },
+  btnSimularText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
   btnVoltar: {
     backgroundColor: colors.surfaceElevated,
     borderRadius: 12,
