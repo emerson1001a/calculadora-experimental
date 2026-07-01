@@ -12,11 +12,13 @@ import {
 } from 'react-native';
 import { colors } from '../theme/colors';
 import { distancias, cidades } from '../data/distancias';
-import { formatPercent, parseNumber } from '../utils/format';
+import { formatCurrency, formatPercent, parseNumber } from '../utils/format';
 import type { ResultadoFrete } from '../types';
 
 type Etapa = 'pergunta' | 'voltaOrigem' | 'triangular' | 'resultado';
 type Fluxo = 'origem' | 'triangular' | null;
+
+const ANTT_PISO_POR_KM = 3.2;
 
 interface CalcResult {
   freteVolta: number;
@@ -25,6 +27,7 @@ interface CalcResult {
   margemVolta: number;
   tipoCalculo: 'cheio' | 'delta';
   deltaKm?: number;
+  distanciaVolta: number;
   freteTotal: number;
   custoTotal: number;
   lucroTotal: number;
@@ -139,6 +142,7 @@ export function SimularRetornoModal({ visible, onClose, resultado }: Props) {
       lucroVolta,
       margemVolta,
       tipoCalculo: 'cheio',
+      distanciaVolta: entrada.distanciaKm,
       freteTotal,
       custoTotal: custoTotalViagem,
       lucroTotal,
@@ -187,6 +191,7 @@ export function SimularRetornoModal({ visible, onClose, resultado }: Props) {
       margemVolta,
       tipoCalculo,
       deltaKm,
+      distanciaVolta: distNova,
       freteTotal,
       custoTotal: custoTotalViagem,
       lucroTotal,
@@ -423,6 +428,43 @@ export function SimularRetornoModal({ visible, onClose, resultado }: Props) {
                   <View style={styles.fraseBox}>
                     <Text style={styles.fraseTexto}>{fraseDContexto(calc)}</Text>
                   </View>
+
+                  {/* Veredicto: margem vs desejada */}
+                  {(() => {
+                    const ok = calc.margemTotal >= entrada.margemDesejada;
+                    const neutro = calc.margemTotal > 0 && !ok;
+                    const s = ok ? styles.veredictoSucesso : neutro ? styles.veredictoWarning : styles.veredictoDanger;
+                    const icone = ok ? '✓' : neutro ? '~' : '✗';
+                    const msg = ok
+                      ? `Margem total ${fmtPct(calc.margemTotal)} — acima da sua meta de ${fmtPct(entrada.margemDesejada)}`
+                      : neutro
+                      ? `Margem total ${fmtPct(calc.margemTotal)} — abaixo da meta de ${fmtPct(entrada.margemDesejada)}`
+                      : `Margem negativa (${fmtPct(calc.margemTotal)}) — viagem dá prejuízo`;
+                    return (
+                      <View style={[styles.veredictoItem, s]}>
+                        <Text style={[styles.veredictoIcone, s]}>{icone}</Text>
+                        <Text style={[styles.veredictoTexto, s]}>{msg}</Text>
+                      </View>
+                    );
+                  })()}
+
+                  {/* Veredicto: piso ANTT viagem completa */}
+                  {(() => {
+                    const distTotal = entrada.distanciaKm + calc.distanciaVolta;
+                    const pisoTotal = distTotal * ANTT_PISO_POR_KM;
+                    const acima = calc.freteTotal >= pisoTotal;
+                    const s = acima ? styles.veredictoSucesso : styles.veredictoWarning;
+                    const icone = acima ? '✓' : '⚠';
+                    const msg = acima
+                      ? `Frete total acima do piso ANTT (${formatCurrency(pisoTotal)} p/ ${distTotal} km)`
+                      : `Frete total ${formatCurrency(calc.freteTotal)} abaixo do piso ANTT de ${formatCurrency(pisoTotal)}`;
+                    return (
+                      <View style={[styles.veredictoItem, s]}>
+                        <Text style={[styles.veredictoIcone, s]}>{icone}</Text>
+                        <Text style={[styles.veredictoTexto, s]}>{msg}</Text>
+                      </View>
+                    );
+                  })()}
 
                   <TouchableOpacity style={styles.calcBtn} onPress={fechar} activeOpacity={0.85}>
                     <Text style={styles.calcBtnTexto}>Fechar</Text>
@@ -688,6 +730,43 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     textAlign: 'center',
+  },
+
+  // Veredictos
+  veredictoItem: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    borderRadius: 10,
+    padding: 12,
+    gap: 10,
+    borderWidth: 1,
+  },
+  veredictoSucesso: {
+    backgroundColor: colors.successBg,
+    borderColor: colors.success,
+    color: colors.success,
+  },
+  veredictoWarning: {
+    backgroundColor: colors.warningBg,
+    borderColor: colors.warning,
+    color: colors.warning,
+  },
+  veredictoDanger: {
+    backgroundColor: colors.dangerBg,
+    borderColor: colors.danger,
+    color: colors.danger,
+  },
+  veredictoIcone: {
+    fontSize: 16,
+    fontWeight: '900' as const,
+    width: 18,
+    textAlign: 'center' as const,
+  },
+  veredictoTexto: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '600' as const,
   },
 
   // Frase de contexto
