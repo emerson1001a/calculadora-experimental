@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors } from '../theme/colors';
 
 interface CustoRowProps {
@@ -10,20 +10,31 @@ interface CustoRowProps {
 }
 
 export function CustoRow({ label, value, onChangeText, unit }: CustoRowProps) {
+  const [editando, setEditando] = useState(false);
+
   return (
     <View style={styles.row}>
       <Text style={styles.label} numberOfLines={1}>{label}</Text>
-      <View style={styles.inputWrap}>
-        <TextInput
-          style={[styles.input, { outlineWidth: 0, WebkitTapHighlightColor: 'transparent' } as object]}
-          value={value}
-          onChangeText={onChangeText}
-          keyboardType="decimal-pad"
-          selectTextOnFocus
-          placeholderTextColor={colors.textMuted}
-        />
+      <TouchableOpacity
+        style={styles.inputWrap}
+        onPress={() => setEditando(true)}
+        activeOpacity={1}
+      >
+        {editando ? (
+          <TextInput
+            style={styles.input}
+            value={value}
+            onChangeText={onChangeText}
+            onBlur={() => setEditando(false)}
+            keyboardType="decimal-pad"
+            autoFocus
+            selectTextOnFocus
+          />
+        ) : (
+          <Text style={styles.valor} numberOfLines={1}>{value || '0'}</Text>
+        )}
         <Text style={styles.unit}>{unit}</Text>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -53,6 +64,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     height: 36,
     width: 90,
+  },
+  valor: {
+    color: colors.text,
+    fontSize: 14,
+    minWidth: 40,
+    flexShrink: 1,
+    textAlign: 'right',
   },
   input: {
     color: colors.text,
