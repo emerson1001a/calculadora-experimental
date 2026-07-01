@@ -18,13 +18,20 @@
         height: 100%;
         flex: 1;
       }
-      input,
-      textarea {
+    </style>
+    <style id="no-tap-highlight">
+      * {
+        -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
+        -webkit-touch-callout: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+      }
+      input, textarea, select {
+        -webkit-appearance: none !important;
         outline: none !important;
         box-shadow: none !important;
         -webkit-tap-highlight-color: transparent !important;
-        user-select: none;
-        -webkit-user-select: none;
+        border: none !important;
       }
     </style>
     <link rel="shortcut icon" href="/favicon.ico" />
