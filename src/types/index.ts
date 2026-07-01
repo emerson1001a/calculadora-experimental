@@ -1,5 +1,19 @@
 export type TipoRetorno = 'nenhum' | 'vazio' | 'comCarga';
 
+export type TipoCarroceria = 'Baú' | 'Graneleiro' | 'Frigorífico' | 'Prancha' | 'Tanque' | 'Outros';
+
+export interface PerfilCaminhao {
+  marca: string;
+  modelo: string;
+  ano: string;
+  dieselKmPorLt: number;
+  arlaKmPorLt: number;
+  depreciacaoPorKm: number;
+  manutencaoPorKm: number;
+  pneusPorKm: number;
+  tipoCarroceria: TipoCarroceria;
+}
+
 export interface Custos {
   dieselKmPorLt: number;
   dieselPrecoPorLitro: number;

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
+  TextInput,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -15,54 +16,86 @@ import { CustoRow } from '../components/CustoRow';
 import { calcularFrete } from '../engine/calcularFrete';
 import { colors } from '../theme/colors';
 import { parseNumber } from '../utils/format';
-import type { EntradaFrete, ResultadoFrete, TipoRetorno } from '../types';
+import { carregarPerfil } from '../utils/storage';
+import { distancias, cidades } from '../data/distancias';
+import type { ResultadoFrete, TipoRetorno, PerfilCaminhao } from '../types';
 
 interface Props {
   onCalcular: (resultado: ResultadoFrete) => void;
-  initialValues?: EntradaFrete | null;
+  onEditarPerfil: () => void;
 }
 
-const CUSTOS_PADRAO = {
-  dieselKmPorLt: '3.5',
-  dieselPrecoPorLitro: '6.50',
-  arlaKmPorLt: '70',
-  arlaPrecoPorLitro: '4.50',
-  pedagio: '150',
-  pedagioVolta: '150',
-  alimentacao: '60',
-  pernoite: '80',
-  manutencaoPorKm: '0.15',
-  pneusPorKm: '0.10',
-  depreciacaoPorKm: '0.20',
-};
+export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
+  // Perfil do caminhão
+  const [perfil, setPerfil] = useState<PerfilCaminhao | null>(null);
+  const [perfilCarregado, setPerfilCarregado] = useState(false);
 
-export function AnalisarScreen({ onCalcular, initialValues: iv }: Props) {
-  const [origem, setOrigem] = useState(iv?.origem ?? '');
-  const [destino, setDestino] = useState(iv?.destino ?? '');
-  const [distancia, setDistancia] = useState(iv ? String(iv.distanciaKm) : '');
+  // Rota
+  const [buscaOrigem, setBuscaOrigem] = useState('');
+  const [origemSelecionada, setOrigemSelecionada] = useState<string | null>(null);
+  const [buscaDestino, setBuscaDestino] = useState('');
+  const [destinoSelecionado, setDestinoSelecionado] = useState<string | null>(null);
+  const [distancia, setDistancia] = useState('');
+
+  // Frete
   const [valorFrete, setValorFrete] = useState('');
-  const [tipoRetorno, setTipoRetorno] = useState<TipoRetorno>(iv?.tipoRetorno ?? 'nenhum');
-  const [margem, setMargem] = useState(iv ? String(iv.margemDesejada) : '15');
-  const [custosAberto, setCustosAberto] = useState(!!iv);
-  const [custos, setCustos] = useState(iv ? {
-    dieselKmPorLt: String(iv.custos.dieselKmPorLt),
-    dieselPrecoPorLitro: String(iv.custos.dieselPrecoPorLitro),
-    arlaKmPorLt: String(iv.custos.arlaKmPorLt),
-    arlaPrecoPorLitro: String(iv.custos.arlaPrecoPorLitro),
-    pedagio: String(iv.custos.pedagio),
-    pedagioVolta: String(iv.custos.pedagio),
-    alimentacao: String(iv.custos.alimentacao),
-    pernoite: String(iv.custos.pernoite),
-    manutencaoPorKm: String(iv.custos.manutencaoPorKm),
-    pneusPorKm: String(iv.custos.pneusPorKm),
-    depreciacaoPorKm: String(iv.custos.depreciacaoPorKm),
-  } : CUSTOS_PADRAO);
+  const [margem, setMargem] = useState('15');
+  const [tipoRetorno, setTipoRetorno] = useState<TipoRetorno>('nenhum');
 
-  function setCusto(campo: keyof typeof CUSTOS_PADRAO, valor: string) {
-    setCustos(prev => ({ ...prev, [campo]: valor }));
+  // Custos da viagem
+  const [pedagio, setPedagio] = useState('150');
+  const [pedagioVolta, setPedagioVolta] = useState('150');
+  const [numeroDiarias, setNumeroDiarias] = useState('1');
+  const [hospedagemPorDiaria, setHospedagemPorDiaria] = useState('80');
+  const [alimentacaoPorDia, setAlimentacaoPorDia] = useState('60');
+  const [precoDiesel, setPrecoDiesel] = useState('6.50');
+  const [precoArla, setPrecoArla] = useState('4.50');
+
+  useEffect(() => {
+    carregarPerfil().then(p => {
+      setPerfil(p);
+      setPerfilCarregado(true);
+    });
+  }, []);
+
+  // Auto-preenche distância quando ambas cidades estão selecionadas
+  useEffect(() => {
+    if (!origemSelecionada || !destinoSelecionado) return;
+    const dist =
+      distancias[origemSelecionada]?.[destinoSelecionado] ??
+      distancias[destinoSelecionado]?.[origemSelecionada] ??
+      null;
+    if (dist !== null) setDistancia(String(dist));
+  }, [origemSelecionada, destinoSelecionado]);
+
+  const sugestoesOrigem = useMemo(() => {
+    if (buscaOrigem.length < 3 || origemSelecionada) return [];
+    const q = buscaOrigem.toLowerCase();
+    return cidades.filter(c => c.toLowerCase().includes(q)).slice(0, 6);
+  }, [buscaOrigem, origemSelecionada]);
+
+  const sugestoesDestino = useMemo(() => {
+    if (buscaDestino.length < 3 || destinoSelecionado) return [];
+    const q = buscaDestino.toLowerCase();
+    return cidades.filter(c => c.toLowerCase().includes(q)).slice(0, 6);
+  }, [buscaDestino, destinoSelecionado]);
+
+  function selecionarOrigem(cidade: string) {
+    setOrigemSelecionada(cidade);
+    setBuscaOrigem(cidade);
+  }
+
+  function selecionarDestino(cidade: string) {
+    setDestinoSelecionado(cidade);
+    setBuscaDestino(cidade);
   }
 
   function handleCalcular() {
+    if (!perfil) {
+      Alert.alert('Perfil não cadastrado', 'Cadastre seu caminhão antes de calcular.');
+      return;
+    }
+
     const dist = parseNumber(distancia);
     const valor = parseNumber(valorFrete);
 
@@ -75,25 +108,27 @@ export function AnalisarScreen({ onCalcular, initialValues: iv }: Props) {
       return;
     }
 
+    const nDiarias = parseNumber(numeroDiarias);
+
     const resultado = calcularFrete({
-      origem: origem.trim() || 'Origem',
-      destino: destino.trim() || 'Destino',
+      origem: origemSelecionada || buscaOrigem.trim() || 'Origem',
+      destino: destinoSelecionado || buscaDestino.trim() || 'Destino',
       distanciaKm: dist,
       valorFrete: valor,
       tipoRetorno,
       margemDesejada: parseNumber(margem),
       custos: {
-        dieselKmPorLt: parseNumber(custos.dieselKmPorLt),
-        dieselPrecoPorLitro: parseNumber(custos.dieselPrecoPorLitro),
-        arlaKmPorLt: parseNumber(custos.arlaKmPorLt),
-        arlaPrecoPorLitro: parseNumber(custos.arlaPrecoPorLitro),
-        pedagio: parseNumber(custos.pedagio),
-        pedagioVolta: parseNumber(custos.pedagioVolta),
-        alimentacao: parseNumber(custos.alimentacao),
-        pernoite: parseNumber(custos.pernoite),
-        manutencaoPorKm: parseNumber(custos.manutencaoPorKm),
-        pneusPorKm: parseNumber(custos.pneusPorKm),
-        depreciacaoPorKm: parseNumber(custos.depreciacaoPorKm),
+        dieselKmPorLt: perfil.dieselKmPorLt,
+        dieselPrecoPorLitro: parseNumber(precoDiesel),
+        arlaKmPorLt: perfil.arlaKmPorLt,
+        arlaPrecoPorLitro: parseNumber(precoArla),
+        pedagio: parseNumber(pedagio),
+        pedagioVolta: parseNumber(pedagioVolta),
+        alimentacao: nDiarias * parseNumber(alimentacaoPorDia),
+        pernoite: nDiarias * parseNumber(hospedagemPorDiaria),
+        manutencaoPorKm: perfil.manutencaoPorKm,
+        pneusPorKm: perfil.pneusPorKm,
+        depreciacaoPorKm: perfil.depreciacaoPorKm,
       },
     });
 
@@ -116,43 +151,102 @@ export function AnalisarScreen({ onCalcular, initialValues: iv }: Props) {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          {iv && (
-            <View style={styles.simulacaoBanner}>
-              <Text style={styles.simulacaoTexto}>
-                Dados da ida mantidos. Informe o valor do frete de volta e confira o pedágio da volta.
-              </Text>
-            </View>
+          {/* PERFIL DO CAMINHÃO */}
+          {perfilCarregado && (
+            perfil ? (
+              <View style={styles.perfilCard}>
+                <View style={styles.perfilInfo}>
+                  <Text style={styles.perfilNome}>{perfil.marca} {perfil.modelo}</Text>
+                  <Text style={styles.perfilDetalhe}>
+                    {perfil.ano ? `${perfil.ano} · ` : ''}{perfil.tipoCarroceria} · {perfil.dieselKmPorLt} Km/L
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={onEditarPerfil} style={styles.editarBtn} activeOpacity={0.7}>
+                  <Text style={styles.editarBtnText}>Editar</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.cadastroBanner}>
+                <Text style={styles.cadastroBannerTexto}>
+                  Cadastre seu caminhão para agilizar seus cálculos
+                </Text>
+                <TouchableOpacity onPress={onEditarPerfil} style={styles.cadastrarBtn} activeOpacity={0.8}>
+                  <Text style={styles.cadastrarBtnTexto}>Cadastrar agora</Text>
+                </TouchableOpacity>
+              </View>
+            )
           )}
+
           {/* ROTA */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Rota</Text>
-            <InputField
-              label="Origem"
-              value={origem}
-              onChangeText={setOrigem}
-              placeholder="Ex: São Paulo - SP"
+
+            <Text style={styles.fieldLabel}>Origem</Text>
+            <TextInput
+              style={styles.autoInput}
+              value={buscaOrigem}
+              onChangeText={v => { setBuscaOrigem(v); setOrigemSelecionada(null); }}
+              placeholder="Digite 3 letras para buscar..."
+              placeholderTextColor={colors.textMuted}
             />
-            <InputField
-              label="Destino"
-              value={destino}
-              onChangeText={setDestino}
-              placeholder="Ex: Curitiba - PR"
+            {sugestoesOrigem.length > 0 && (
+              <View style={styles.sugestoesBox}>
+                {sugestoesOrigem.map(c => (
+                  <TouchableOpacity
+                    key={c}
+                    style={styles.sugestaoItem}
+                    onPress={() => selecionarOrigem(c)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.sugestaoTexto}>{c}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            <Text style={[styles.fieldLabel, styles.fieldLabelMt]}>Destino</Text>
+            <TextInput
+              style={styles.autoInput}
+              value={buscaDestino}
+              onChangeText={v => { setBuscaDestino(v); setDestinoSelecionado(null); }}
+              placeholder="Digite 3 letras para buscar..."
+              placeholderTextColor={colors.textMuted}
             />
-            <InputField
-              label="Distância (km)"
-              value={distancia}
-              onChangeText={setDistancia}
-              placeholder="0"
-              keyboardType="numeric"
-              suffix="km"
-            />
+            {sugestoesDestino.length > 0 && (
+              <View style={styles.sugestoesBox}>
+                {sugestoesDestino.map(c => (
+                  <TouchableOpacity
+                    key={c}
+                    style={styles.sugestaoItem}
+                    onPress={() => selecionarDestino(c)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.sugestaoTexto}>{c}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            <View style={styles.distanciaRow}>
+              <InputField
+                label="Distância"
+                value={distancia}
+                onChangeText={setDistancia}
+                placeholder="0"
+                keyboardType="numeric"
+                suffix="km"
+              />
+              {origemSelecionada && destinoSelecionado && distancia !== '' && (
+                <Text style={styles.distHint}>da tabela de rodovias</Text>
+              )}
+            </View>
           </View>
 
           {/* FRETE */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Frete</Text>
             <InputField
-              label="Valor do Frete"
+              label="Valor ofertado"
               value={valorFrete}
               onChangeText={setValorFrete}
               placeholder="0,00"
@@ -160,7 +254,7 @@ export function AnalisarScreen({ onCalcular, initialValues: iv }: Props) {
               prefix="R$"
             />
             <InputField
-              label="Margem Desejada"
+              label="Margem desejada"
               value={margem}
               onChangeText={setMargem}
               placeholder="15"
@@ -170,7 +264,7 @@ export function AnalisarScreen({ onCalcular, initialValues: iv }: Props) {
             <View style={styles.retornoRow}>
               <Text style={styles.retornoLabel}>Tipo de viagem</Text>
               <View style={styles.retornoSegment}>
-                {(['nenhum', 'vazio', 'comCarga'] as TipoRetorno[]).map((opcao) => {
+                {(['nenhum', 'vazio', 'comCarga'] as TipoRetorno[]).map(opcao => {
                   const labels: Record<TipoRetorno, string> = {
                     nenhum: 'Só ida',
                     vazio: 'Volta vazia',
@@ -184,7 +278,12 @@ export function AnalisarScreen({ onCalcular, initialValues: iv }: Props) {
                       onPress={() => setTipoRetorno(opcao)}
                       activeOpacity={0.7}
                     >
-                      <Text style={[styles.retornoOpcaoTexto, ativo && styles.retornoOpcaoTextoAtivo]}>
+                      <Text
+                        style={[
+                          styles.retornoOpcaoTexto,
+                          ativo && styles.retornoOpcaoTextoAtivo,
+                        ]}
+                      >
                         {labels[opcao]}
                       </Text>
                     </TouchableOpacity>
@@ -194,100 +293,70 @@ export function AnalisarScreen({ onCalcular, initialValues: iv }: Props) {
             </View>
           </View>
 
-          {/* CUSTOS */}
+          {/* CUSTOS DA VIAGEM */}
           <View style={styles.card}>
-            <TouchableOpacity
-              style={styles.cardTitleRow}
-              onPress={() => setCustosAberto(!custosAberto)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.cardTitle}>Custos Operacionais</Text>
-              <Text style={styles.expandIcon}>{custosAberto ? '▲' : '▼'}</Text>
-            </TouchableOpacity>
-            <Text style={styles.custosHint}>
-              Valores padrão para carreta 5 eixos. Toque para editar.
-            </Text>
+            <Text style={styles.cardTitle}>Custos da Viagem</Text>
 
-            {custosAberto && (
-              <View style={styles.custosGrid}>
-                <Text style={styles.custosSectionLabel}>Diesel</Text>
-                <CustoRow
-                  label="Consumo do diesel"
-                  value={custos.dieselKmPorLt}
-                  onChangeText={v => setCusto('dieselKmPorLt', v)}
-                  unit="Km/L"
-                />
-                <CustoRow
-                  label="Preço do diesel"
-                  value={custos.dieselPrecoPorLitro}
-                  onChangeText={v => setCusto('dieselPrecoPorLitro', v)}
-                  unit="R$/L"
-                />
-                <Text style={styles.custosSectionLabel}>Arla 32</Text>
-                <CustoRow
-                  label="Consumo do Arla 32"
-                  value={custos.arlaKmPorLt}
-                  onChangeText={v => setCusto('arlaKmPorLt', v)}
-                  unit="Km/L"
-                />
-                <CustoRow
-                  label="Preço do Arla 32"
-                  value={custos.arlaPrecoPorLitro}
-                  onChangeText={v => setCusto('arlaPrecoPorLitro', v)}
-                  unit="R$/L"
-                />
-                <Text style={styles.custosSectionLabel}>Viagem</Text>
-                <CustoRow
-                  label="Pedágio (ida)"
-                  value={custos.pedagio}
-                  onChangeText={v => setCusto('pedagio', v)}
-                  unit="R$"
-                />
-                {tipoRetorno === 'comCarga' && (
-                  <CustoRow
-                    label="Pedágio (volta)"
-                    value={custos.pedagioVolta}
-                    onChangeText={v => setCusto('pedagioVolta', v)}
-                    unit="R$"
-                  />
-                )}
-                <CustoRow
-                  label="Alimentação"
-                  value={custos.alimentacao}
-                  onChangeText={v => setCusto('alimentacao', v)}
-                  unit="R$"
-                />
-                <CustoRow
-                  label="Pernoite"
-                  value={custos.pernoite}
-                  onChangeText={v => setCusto('pernoite', v)}
-                  unit="R$"
-                />
-                <Text style={styles.custosSectionLabel}>Por Quilômetro</Text>
-                <CustoRow
-                  label="Manutenção"
-                  value={custos.manutencaoPorKm}
-                  onChangeText={v => setCusto('manutencaoPorKm', v)}
-                  unit="R$/km"
-                />
-                <CustoRow
-                  label="Pneus"
-                  value={custos.pneusPorKm}
-                  onChangeText={v => setCusto('pneusPorKm', v)}
-                  unit="R$/km"
-                />
-                <CustoRow
-                  label="Depreciação"
-                  value={custos.depreciacaoPorKm}
-                  onChangeText={v => setCusto('depreciacaoPorKm', v)}
-                  unit="R$/km"
-                />
-              </View>
+            <Text style={styles.sectionLabel}>Pedágio</Text>
+            <CustoRow
+              label="Pedágio (ida)"
+              value={pedagio}
+              onChangeText={setPedagio}
+              unit="R$"
+            />
+            {tipoRetorno === 'comCarga' && (
+              <CustoRow
+                label="Pedágio (volta)"
+                value={pedagioVolta}
+                onChangeText={setPedagioVolta}
+                unit="R$"
+              />
             )}
+
+            <Text style={styles.sectionLabel}>Estadia e Alimentação</Text>
+            <CustoRow
+              label="Número de diárias"
+              value={numeroDiarias}
+              onChangeText={setNumeroDiarias}
+              unit="noites"
+            />
+            <CustoRow
+              label="Hospedagem"
+              value={hospedagemPorDiaria}
+              onChangeText={setHospedagemPorDiaria}
+              unit="R$/diária"
+            />
+            <CustoRow
+              label="Alimentação"
+              value={alimentacaoPorDia}
+              onChangeText={setAlimentacaoPorDia}
+              unit="R$/dia"
+            />
+
+            <Text style={styles.sectionLabel}>Combustível</Text>
+            <CustoRow
+              label="Preço do diesel"
+              value={precoDiesel}
+              onChangeText={setPrecoDiesel}
+              unit="R$/L"
+            />
+            <CustoRow
+              label="Preço do Arla 32"
+              value={precoArla}
+              onChangeText={setPrecoArla}
+              unit="R$/L"
+            />
           </View>
 
-          <TouchableOpacity style={styles.btnCalcular} onPress={handleCalcular} activeOpacity={0.85}>
-            <Text style={styles.btnCalcularText}>CALCULAR FRETE</Text>
+          <TouchableOpacity
+            style={[styles.btnCalcular, !perfil && styles.btnCalcularBloqueado]}
+            onPress={handleCalcular}
+            disabled={!perfil && perfilCarregado}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.btnCalcularText}>
+              {!perfil && perfilCarregado ? 'CADASTRE SEU CAMINHÃO PRIMEIRO' : 'CALCULAR FRETE'}
+            </Text>
           </TouchableOpacity>
 
           <View style={{ height: 24 }} />
@@ -327,6 +396,73 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
   },
+
+  // Perfil card
+  perfilCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  perfilInfo: {
+    flex: 1,
+  },
+  perfilNome: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  perfilDetalhe: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  editarBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceElevated,
+  },
+  editarBtnText: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // Cadastro banner
+  cadastroBanner: {
+    backgroundColor: colors.warningBg,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.warning,
+    gap: 10,
+  },
+  cadastroBannerTexto: {
+    color: colors.warning,
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
+  },
+  cadastrarBtn: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.warning,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  cadastrarBtnTexto: {
+    color: colors.black,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
+  // Cards
   card: {
     backgroundColor: colors.surface,
     borderRadius: 12,
@@ -340,39 +476,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 1,
-    marginBottom: 12,
+    marginBottom: 14,
   },
-  cardTitleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  expandIcon: {
-    color: colors.primary,
-    fontSize: 12,
-  },
-  simulacaoBanner: {
-    backgroundColor: colors.warningBg,
-    borderRadius: 10,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: colors.warning,
-  },
-  simulacaoTexto: {
-    color: colors.warning,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  custosHint: {
-    color: colors.textMuted,
-    fontSize: 12,
-    marginBottom: 12,
-  },
-  custosGrid: {
-    marginTop: 4,
-  },
-  custosSectionLabel: {
+  sectionLabel: {
     color: colors.textSecondary,
     fontSize: 11,
     textTransform: 'uppercase',
@@ -380,8 +486,59 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 4,
   },
+
+  // Autocomplete
+  fieldLabel: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  fieldLabelMt: {
+    marginTop: 14,
+  },
+  autoInput: {
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 12,
+    height: 44,
+    color: colors.text,
+    fontSize: 15,
+  },
+  sugestoesBox: {
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    overflow: 'hidden',
+    marginTop: 2,
+  },
+  sugestaoItem: {
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  sugestaoTexto: {
+    color: colors.text,
+    fontSize: 14,
+  },
+  distanciaRow: {
+    marginTop: 14,
+  },
+  distHint: {
+    color: colors.success,
+    fontSize: 11,
+    marginTop: -8,
+    marginBottom: 4,
+  },
+
+  // Tipo retorno
   retornoRow: {
-    marginTop: 8,
+    marginTop: 4,
   },
   retornoLabel: {
     color: colors.textSecondary,
@@ -416,6 +573,8 @@ const styles = StyleSheet.create({
   retornoOpcaoTextoAtivo: {
     color: colors.white,
   },
+
+  // Botão calcular
   btnCalcular: {
     backgroundColor: colors.primary,
     borderRadius: 12,
@@ -428,10 +587,15 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
+  btnCalcularBloqueado: {
+    backgroundColor: colors.surfaceElevated,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
   btnCalcularText: {
     color: colors.white,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
-    letterSpacing: 1.5,
+    letterSpacing: 1.2,
   },
 });

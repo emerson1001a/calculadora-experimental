@@ -3,9 +3,10 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AnalisarScreen } from './src/screens/AnalisarScreen';
 import { ResultadoScreen } from './src/screens/ResultadoScreen';
+import { PerfilCaminhaoScreen } from './src/screens/PerfilCaminhaoScreen';
 import type { ResultadoFrete } from './src/types';
 
-type Tela = 'analisar' | 'resultado';
+type Tela = 'analisar' | 'resultado' | 'perfil';
 
 export default function App() {
   const [tela, setTela] = useState<Tela>('analisar');
@@ -16,17 +17,23 @@ export default function App() {
     setTela('resultado');
   }
 
-  function handleVoltar() {
-    setTela('analisar');
-  }
-
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      {tela === 'analisar' ? (
-        <AnalisarScreen onCalcular={handleCalcular} />
-      ) : (
-        <ResultadoScreen resultado={resultado!} onVoltar={handleVoltar} />
+      {tela === 'analisar' && (
+        <AnalisarScreen
+          onCalcular={handleCalcular}
+          onEditarPerfil={() => setTela('perfil')}
+        />
+      )}
+      {tela === 'resultado' && (
+        <ResultadoScreen
+          resultado={resultado!}
+          onVoltar={() => setTela('analisar')}
+        />
+      )}
+      {tela === 'perfil' && (
+        <PerfilCaminhaoScreen onVoltar={() => setTela('analisar')} />
       )}
     </SafeAreaProvider>
   );
