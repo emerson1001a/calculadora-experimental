@@ -25,6 +25,7 @@ interface Props {
 const CUSTOS_PADRAO = {
   dieselLtPorKm: '0.35',
   dieselPrecoPorLitro: '6.50',
+  arlaPrecoPorLitro: '4.50',
   pedagio: '150',
   alimentacao: '60',
   pernoite: '80',
@@ -70,6 +71,7 @@ export function AnalisarScreen({ onCalcular }: Props) {
       custos: {
         dieselLtPorKm: parseNumber(custos.dieselLtPorKm),
         dieselPrecoPorLitro: parseNumber(custos.dieselPrecoPorLitro),
+        arlaPrecoPorLitro: parseNumber(custos.arlaPrecoPorLitro),
         pedagio: parseNumber(custos.pedagio),
         alimentacao: parseNumber(custos.alimentacao),
         pernoite: parseNumber(custos.pernoite),
@@ -185,6 +187,15 @@ export function AnalisarScreen({ onCalcular }: Props) {
                   onChangeText={v => setCusto('dieselPrecoPorLitro', v)}
                   unit="R$/L"
                 />
+                <CustoRow
+                  label="Preço do Arla 32"
+                  value={custos.arlaPrecoPorLitro}
+                  onChangeText={v => setCusto('arlaPrecoPorLitro', v)}
+                  unit="R$/L"
+                />
+                <Text style={styles.arlaHint}>
+                  Consumo de Arla: 5% do diesel (calculado automaticamente)
+                </Text>
                 <Text style={styles.custosSectionLabel}>Viagem</Text>
                 <CustoRow
                   label="Pedágio (ida)"
@@ -307,6 +318,13 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginTop: 12,
+    marginBottom: 4,
+  },
+  arlaHint: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontStyle: 'italic',
+    marginTop: 4,
     marginBottom: 4,
   },
   switchRow: {

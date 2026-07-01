@@ -189,6 +189,7 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Detalhamento de Custos</Text>
           <LinhaDetalhe label="Diesel" valor={custoDetalhado.diesel} />
+          <LinhaDetalhe label="Arla 32" valor={custoDetalhado.arla} />
           <LinhaDetalhe label="Pedágio" valor={custoDetalhado.pedagio} />
           <LinhaDetalhe label="Alimentação" valor={custoDetalhado.alimentacao} />
           <LinhaDetalhe label="Pernoite" valor={custoDetalhado.pernoite} />

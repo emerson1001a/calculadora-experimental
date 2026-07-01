@@ -1,6 +1,7 @@
 export interface Custos {
   dieselLtPorKm: number;
   dieselPrecoPorLitro: number;
+  arlaPrecoPorLitro: number;
   pedagio: number;
   alimentacao: number;
   pernoite: number;
@@ -21,6 +22,7 @@ export interface EntradaFrete {
 
 export interface CustoDetalhado {
   diesel: number;
+  arla: number;
   pedagio: number;
   alimentacao: number;
   pernoite: number;

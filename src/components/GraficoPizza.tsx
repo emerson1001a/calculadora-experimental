@@ -13,6 +13,7 @@ interface Props {
 
 const ITENS = [
   { chave: 'diesel',       label: 'Diesel',       cor: '#F59B3A' },
+  { chave: 'arla',         label: 'Arla 32',      cor: '#26C6DA' },
   { chave: 'pedagio',      label: 'Pedágio',      cor: '#4FC3F7' },
   { chave: 'alimentacao',  label: 'Alimentação',  cor: '#81C784' },
   { chave: 'pernoite',     label: 'Pernoite',     cor: '#CE93D8' },

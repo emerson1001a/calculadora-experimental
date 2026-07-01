@@ -11,6 +11,7 @@ export function calcularFrete(entrada: EntradaFrete): ResultadoFrete {
   const distanciaTotal = distanciaKm * fatorKm;
 
   const diesel = custos.dieselLtPorKm * custos.dieselPrecoPorLitro * distanciaTotal;
+  const arla = custos.dieselLtPorKm * 0.05 * custos.arlaPrecoPorLitro * distanciaTotal;
   const pedagio = custos.pedagio * fatorKm;
   const alimentacao = custos.alimentacao;
   const pernoite = custos.pernoite;
@@ -20,6 +21,7 @@ export function calcularFrete(entrada: EntradaFrete): ResultadoFrete {
 
   const custoDetalhado: CustoDetalhado = {
     diesel,
+    arla,
     pedagio,
     alimentacao,
     pernoite,
