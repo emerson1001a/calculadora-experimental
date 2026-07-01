@@ -10,6 +10,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
 import { formatCurrency, formatPercent } from '../utils/format';
 import type { ResultadoFrete } from '../types';
+import { SliderMargem } from '../components/SliderMargem';
+import { GraficoPizza } from '../components/GraficoPizza';
 
 interface Props {
   resultado: ResultadoFrete;
@@ -140,6 +142,15 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
           </View>
         </View>
 
+        {/* EXPLORADOR DE MARGEM */}
+        <View style={styles.card}>
+          <SliderMargem
+            custoTotal={custoTotal}
+            valorFrete={entrada.valorFrete}
+            margemInicial={margemReal}
+          />
+        </View>
+
         {/* PISO ANTT */}
         <View style={[styles.card, abaixoPisoANTT && styles.cardAlerta]}>
           <Text style={styles.cardTitle}>Piso Mínimo ANTT</Text>
@@ -162,6 +173,16 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
               </Text>
             </View>
           )}
+        </View>
+
+        {/* GRÁFICO DE PIZZA */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Distribuição de Custos</Text>
+          <GraficoPizza
+            custoDetalhado={custoDetalhado}
+            lucro={lucro}
+            valorFrete={entrada.valorFrete}
+          />
         </View>
 
         {/* DETALHAMENTO DE CUSTOS */}
