@@ -1,6 +1,7 @@
 export interface Custos {
-  dieselLtPorKm: number;
+  dieselKmPorLt: number;
   dieselPrecoPorLitro: number;
+  arlaKmPorLt: number;
   arlaPrecoPorLitro: number;
   pedagio: number;
   alimentacao: number;

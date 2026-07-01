@@ -23,8 +23,9 @@ interface Props {
 }
 
 const CUSTOS_PADRAO = {
-  dieselLtPorKm: '0.35',
+  dieselKmPorLt: '3.5',
   dieselPrecoPorLitro: '6.50',
+  arlaKmPorLt: '70',
   arlaPrecoPorLitro: '4.50',
   pedagio: '150',
   alimentacao: '60',
@@ -69,8 +70,9 @@ export function AnalisarScreen({ onCalcular }: Props) {
       voltaVazia,
       margemDesejada: parseNumber(margem),
       custos: {
-        dieselLtPorKm: parseNumber(custos.dieselLtPorKm),
+        dieselKmPorLt: parseNumber(custos.dieselKmPorLt),
         dieselPrecoPorLitro: parseNumber(custos.dieselPrecoPorLitro),
+        arlaKmPorLt: parseNumber(custos.arlaKmPorLt),
         arlaPrecoPorLitro: parseNumber(custos.arlaPrecoPorLitro),
         pedagio: parseNumber(custos.pedagio),
         alimentacao: parseNumber(custos.alimentacao),
@@ -174,12 +176,12 @@ export function AnalisarScreen({ onCalcular }: Props) {
 
             {custosAberto && (
               <View style={styles.custosGrid}>
-                <Text style={styles.custosSectionLabel}>Combustível</Text>
+                <Text style={styles.custosSectionLabel}>Diesel</Text>
                 <CustoRow
-                  label="Consumo de diesel"
-                  value={custos.dieselLtPorKm}
-                  onChangeText={v => setCusto('dieselLtPorKm', v)}
-                  unit="L/km"
+                  label="Consumo do diesel"
+                  value={custos.dieselKmPorLt}
+                  onChangeText={v => setCusto('dieselKmPorLt', v)}
+                  unit="Km/L"
                 />
                 <CustoRow
                   label="Preço do diesel"
@@ -187,15 +189,19 @@ export function AnalisarScreen({ onCalcular }: Props) {
                   onChangeText={v => setCusto('dieselPrecoPorLitro', v)}
                   unit="R$/L"
                 />
+                <Text style={styles.custosSectionLabel}>Arla 32</Text>
+                <CustoRow
+                  label="Consumo do Arla 32"
+                  value={custos.arlaKmPorLt}
+                  onChangeText={v => setCusto('arlaKmPorLt', v)}
+                  unit="Km/L"
+                />
                 <CustoRow
                   label="Preço do Arla 32"
                   value={custos.arlaPrecoPorLitro}
                   onChangeText={v => setCusto('arlaPrecoPorLitro', v)}
                   unit="R$/L"
                 />
-                <Text style={styles.arlaHint}>
-                  Consumo de Arla: 5% do diesel (calculado automaticamente)
-                </Text>
                 <Text style={styles.custosSectionLabel}>Viagem</Text>
                 <CustoRow
                   label="Pedágio (ida)"
@@ -318,13 +324,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginTop: 12,
-    marginBottom: 4,
-  },
-  arlaHint: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontStyle: 'italic',
-    marginTop: 4,
     marginBottom: 4,
   },
   switchRow: {
