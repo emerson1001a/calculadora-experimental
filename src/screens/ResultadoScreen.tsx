@@ -144,6 +144,12 @@ export function ResultadoScreen({ resultado, onVoltar, onSimularRetorno }: Props
           </View>
         </View>
 
+        {onSimularRetorno && entrada.tipoRetorno === 'vazio' && (
+          <TouchableOpacity style={styles.btnSimular} onPress={onSimularRetorno} activeOpacity={0.8}>
+            <Text style={styles.btnSimularText}>E se eu pegar frete de volta?</Text>
+          </TouchableOpacity>
+        )}
+
         {/* EXPLORADOR DE MARGEM */}
         <View style={styles.card}>
           <SliderMargem
@@ -201,12 +207,6 @@ export function ResultadoScreen({ resultado, onVoltar, onSimularRetorno }: Props
           <View style={styles.totalSeparator} />
           <LinhaDetalhe label="CUSTO TOTAL" valor={custoTotal} destaque />
         </View>
-
-        {onSimularRetorno && entrada.tipoRetorno === 'vazio' && (
-          <TouchableOpacity style={styles.btnSimular} onPress={onSimularRetorno} activeOpacity={0.85}>
-            <Text style={styles.btnSimularText}>E se eu pegar frete de volta?</Text>
-          </TouchableOpacity>
-        )}
 
         <TouchableOpacity style={styles.btnVoltar} onPress={onVoltar} activeOpacity={0.85}>
           <Text style={styles.btnVoltarText}>NOVA ANÁLISE</Text>
@@ -426,17 +426,16 @@ const styles = StyleSheet.create({
 
   // Botões
   btnSimular: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
+    alignSelf: 'center',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
     borderWidth: 1,
     borderColor: colors.border,
-    marginTop: 4,
   },
   btnSimularText: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   btnVoltar: {
