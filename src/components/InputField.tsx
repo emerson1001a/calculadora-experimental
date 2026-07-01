@@ -29,7 +29,7 @@ export function InputField({
       <View style={[styles.inputRow, !editable && styles.inputDisabled]}>
         {prefix ? <Text style={styles.affix}>{prefix}</Text> : null}
         <TextInput
-          style={styles.input}
+          style={[styles.input, { outlineWidth: 0, WebkitTapHighlightColor: 'transparent' } as object]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}

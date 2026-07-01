@@ -15,7 +15,7 @@ export function CustoRow({ label, value, onChangeText, unit }: CustoRowProps) {
       <Text style={styles.label} numberOfLines={1}>{label}</Text>
       <View style={styles.inputWrap}>
         <TextInput
-          style={[styles.input, { outlineWidth: 0 } as object]}
+          style={[styles.input, { outlineWidth: 0, WebkitTapHighlightColor: 'transparent' } as object]}
           value={value}
           onChangeText={onChangeText}
           keyboardType="decimal-pad"
