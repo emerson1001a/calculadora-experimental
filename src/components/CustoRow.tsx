@@ -57,7 +57,8 @@ const styles = StyleSheet.create({
   input: {
     color: colors.text,
     fontSize: 14,
-    flex: 1,
+    minWidth: 40,
+    flexShrink: 1,
     textAlign: 'right',
   },
   unit: {
