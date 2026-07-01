@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -12,11 +12,11 @@ import { formatCurrency, formatPercent } from '../utils/format';
 import type { ResultadoFrete } from '../types';
 import { SliderMargem } from '../components/SliderMargem';
 import { GraficoPizza } from '../components/GraficoPizza';
+import { SimularRetornoModal } from '../components/SimularRetornoModal';
 
 interface Props {
   resultado: ResultadoFrete;
   onVoltar: () => void;
-  onSimularRetorno?: () => void;
 }
 
 const VEREDICTO_CONFIG = {
@@ -62,11 +62,12 @@ function LinhaDetalhe({ label, valor, destaque }: LinhaDetalheProps) {
   );
 }
 
-export function ResultadoScreen({ resultado, onVoltar, onSimularRetorno }: Props) {
+export function ResultadoScreen({ resultado, onVoltar }: Props) {
   const { entrada, custoTotal, custoDetalhado, lucro, margemReal, pisoANTT, abaixoPisoANTT, veredicto } = resultado;
   const cfg = VEREDICTO_CONFIG[veredicto];
   const temRetorno = entrada.tipoRetorno !== 'nenhum';
   const distTotal = entrada.distanciaKm * (temRetorno ? 2 : 1);
+  const [modalAberto, setModalAberto] = useState(false);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -144,11 +145,21 @@ export function ResultadoScreen({ resultado, onVoltar, onSimularRetorno }: Props
           </View>
         </View>
 
-        {onSimularRetorno && entrada.tipoRetorno === 'vazio' && (
-          <TouchableOpacity style={styles.btnSimular} onPress={onSimularRetorno} activeOpacity={0.8}>
+        {entrada.tipoRetorno === 'vazio' && (
+          <TouchableOpacity
+            style={styles.btnSimular}
+            onPress={() => setModalAberto(true)}
+            activeOpacity={0.8}
+          >
             <Text style={styles.btnSimularText}>E se eu pegar frete de volta?</Text>
           </TouchableOpacity>
         )}
+
+        <SimularRetornoModal
+          visible={modalAberto}
+          onClose={() => setModalAberto(false)}
+          resultado={resultado}
+        />
 
         {/* EXPLORADOR DE MARGEM */}
         <View style={styles.card}>
