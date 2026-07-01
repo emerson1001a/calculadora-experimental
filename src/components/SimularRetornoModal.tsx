@@ -12,17 +12,23 @@ import {
 } from 'react-native';
 import { colors } from '../theme/colors';
 import { distancias, cidades } from '../data/distancias';
-import { formatCurrency, parseNumber } from '../utils/format';
+import { formatPercent, parseNumber } from '../utils/format';
 import type { ResultadoFrete } from '../types';
 
 type Etapa = 'pergunta' | 'voltaOrigem' | 'triangular' | 'resultado';
 type Fluxo = 'origem' | 'triangular' | null;
 
 interface CalcResult {
-  lucroExtra: number;
+  freteVolta: number;
+  custoVolta: number;
+  lucroVolta: number;
+  margemVolta: number;
   tipoCalculo: 'cheio' | 'delta';
   deltaKm?: number;
-  custoDelta?: number;
+  freteTotal: number;
+  custoTotal: number;
+  lucroTotal: number;
+  margemTotal: number;
 }
 
 interface Props {
@@ -37,6 +43,42 @@ function normalizarCidade(input: string): string {
 
 function buscarDistancia(cidadeA: string, cidadeB: string): number | null {
   return distancias[cidadeA]?.[cidadeB] ?? distancias[cidadeB]?.[cidadeA] ?? null;
+}
+
+// Moeda sem decimais para a tabela compacta
+function fmtK(v: number): string {
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+}
+
+function fmtPct(v: number): string {
+  return v.toFixed(0) + '%';
+}
+
+interface LinhaProps {
+  label: string;
+  c1: string;
+  c2: string;
+  c3: string;
+  isHeader?: boolean;
+  destaqueCor?: string;
+}
+
+function LinhaTabela({ label, c1, c2, c3, isHeader, destaqueCor }: LinhaProps) {
+  const labelStyle = isHeader ? styles.thLabel : styles.tdLabel;
+  const celStyle = isHeader ? styles.thCel : styles.tdCel;
+  const totalStyle = destaqueCor
+    ? [styles.tdCelTotal, { color: destaqueCor }]
+    : isHeader
+    ? styles.thCel
+    : styles.tdCel;
+  return (
+    <View style={[styles.tabelaLinha, isHeader && styles.tabelaLinhaHeader]}>
+      <Text style={labelStyle} numberOfLines={1}>{label}</Text>
+      <Text style={celStyle} numberOfLines={1}>{c1}</Text>
+      <Text style={celStyle} numberOfLines={1}>{c2}</Text>
+      <Text style={totalStyle as any} numberOfLines={1}>{c3}</Text>
+    </View>
+  );
 }
 
 export function SimularRetornoModal({ visible, onClose, resultado }: Props) {
@@ -81,13 +123,32 @@ export function SimularRetornoModal({ visible, onClose, resultado }: Props) {
   }
 
   function calcularVoltaOrigem() {
-    const valor = parseNumber(valorFrete);
-    setCalc({ lucroExtra: valor, tipoCalculo: 'cheio' });
+    const freteVolta = parseNumber(valorFrete);
+    const custoVolta = 0;
+    const lucroVolta = freteVolta;
+    const margemVolta = 100;
+
+    const freteTotal = entrada.valorFrete + freteVolta;
+    const custoTotalViagem = resultado.custoTotal + custoVolta;
+    const lucroTotal = resultado.lucro + lucroVolta;
+    const margemTotal = freteTotal > 0 ? (lucroTotal / freteTotal) * 100 : 0;
+
+    setCalc({
+      freteVolta,
+      custoVolta,
+      lucroVolta,
+      margemVolta,
+      tipoCalculo: 'cheio',
+      freteTotal,
+      custoTotal: custoTotalViagem,
+      lucroTotal,
+      margemTotal,
+    });
     setEtapa('resultado');
   }
 
   function calcularTriangular() {
-    const valor = parseNumber(valorFrete);
+    const freteVolta = parseNumber(valorFrete);
     const distNova = parseNumber(distanciaStr);
     const distAbsorvida = entrada.distanciaKm;
     const c = entrada.custos;
@@ -99,13 +160,38 @@ export function SimularRetornoModal({ visible, onClose, resultado }: Props) {
       c.pneusPorKm +
       c.depreciacaoPorKm;
 
+    let custoVolta = 0;
+    let deltaKm: number | undefined;
+    let tipoCalculo: 'cheio' | 'delta';
+
     if (distNova <= distAbsorvida) {
-      setCalc({ lucroExtra: valor, tipoCalculo: 'cheio' });
+      tipoCalculo = 'cheio';
     } else {
-      const deltaKm = Math.round(distNova - distAbsorvida);
-      const custoDelta = deltaKm * custoPorKm;
-      setCalc({ lucroExtra: valor - custoDelta, tipoCalculo: 'delta', deltaKm, custoDelta });
+      deltaKm = Math.round(distNova - distAbsorvida);
+      custoVolta = deltaKm * custoPorKm;
+      tipoCalculo = 'delta';
     }
+
+    const lucroVolta = freteVolta - custoVolta;
+    const margemVolta = freteVolta > 0 ? (lucroVolta / freteVolta) * 100 : 0;
+
+    const freteTotal = entrada.valorFrete + freteVolta;
+    const custoTotalViagem = resultado.custoTotal + custoVolta;
+    const lucroTotal = resultado.lucro + lucroVolta;
+    const margemTotal = freteTotal > 0 ? (lucroTotal / freteTotal) * 100 : 0;
+
+    setCalc({
+      freteVolta,
+      custoVolta,
+      lucroVolta,
+      margemVolta,
+      tipoCalculo,
+      deltaKm,
+      freteTotal,
+      custoTotal: custoTotalViagem,
+      lucroTotal,
+      margemTotal,
+    });
     setEtapa('resultado');
   }
 
@@ -122,6 +208,20 @@ export function SimularRetornoModal({ visible, onClose, resultado }: Props) {
 
   const podeProsseguirOrigem = valorFrete.length > 0 && parseNumber(valorFrete) > 0;
   const podeProsseguirTriangular = podeProsseguirOrigem && distanciaStr.length > 0;
+
+  function fraseDContexto(c: CalcResult): string {
+    const margemIda = resultado.margemReal;
+    const ganho = c.margemTotal - margemIda;
+    const custoAlto = c.tipoCalculo === 'delta' && c.custoVolta > c.freteVolta * 0.4;
+
+    if (custoAlto) {
+      return 'Esse frete de volta tem um trecho extra que reduz o ganho. Avalie bem.';
+    }
+    if (ganho > 5) {
+      return `Pegando o frete de volta, sua margem sobe de ${formatPercent(margemIda)} para ${formatPercent(c.margemTotal)}. Vale muito a pena!`;
+    }
+    return 'O frete de volta ajuda, mas o ganho é pequeno. Você decide.';
+  }
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={fechar}>
@@ -174,9 +274,7 @@ export function SimularRetornoModal({ visible, onClose, resultado }: Props) {
                     onPress={irParaTriangular}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.opcaoBtnTexto}>
-                      Não, vou para outra cidade
-                    </Text>
+                    <Text style={styles.opcaoBtnTexto}>Não, vou para outra cidade</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -255,9 +353,7 @@ export function SimularRetornoModal({ visible, onClose, resultado }: Props) {
                     keyboardType="numeric"
                   />
                   {cidadeSelecionada && distanciaStr !== '' && (
-                    <Text style={styles.distHint}>
-                      Distância automática da tabela de rodovias
-                    </Text>
+                    <Text style={styles.distHint}>Distância automática da tabela de rodovias</Text>
                   )}
                   {cidadeSelecionada && distanciaStr === '' && (
                     <Text style={styles.distHintAviso}>
@@ -289,57 +385,44 @@ export function SimularRetornoModal({ visible, onClose, resultado }: Props) {
                 </View>
               )}
 
-              {/* ETAPA 3: RESULTADO */}
+              {/* ETAPA 3: RESULTADO CONSOLIDADO */}
               {etapa === 'resultado' && calc !== null && (
                 <View style={styles.etapa}>
-                  <Text style={styles.titulo}>Lucro extra com o frete de volta</Text>
+                  <Text style={styles.titulo}>Viagem completa</Text>
 
-                  <View style={[
-                    styles.resultCard,
-                    { borderColor: calc.lucroExtra >= 0 ? colors.success : colors.danger }
-                  ]}>
-                    <Text style={styles.resultLabel}>
-                      {calc.lucroExtra >= 0 ? 'Lucro extra' : 'Prejuízo'}
-                    </Text>
-                    <Text style={[
-                      styles.resultValor,
-                      { color: calc.lucroExtra >= 0 ? colors.success : colors.danger }
-                    ]}>
-                      {formatCurrency(calc.lucroExtra)}
-                    </Text>
+                  <View style={styles.tabela}>
+                    <LinhaTabela label="" c1="IDA" c2="VOLTA" c3="TOTAL" isHeader />
+                    <LinhaTabela
+                      label="Frete"
+                      c1={fmtK(entrada.valorFrete)}
+                      c2={fmtK(calc.freteVolta)}
+                      c3={fmtK(calc.freteTotal)}
+                    />
+                    <LinhaTabela
+                      label="Custo"
+                      c1={fmtK(resultado.custoTotal)}
+                      c2={fmtK(calc.custoVolta)}
+                      c3={fmtK(calc.custoTotal)}
+                    />
+                    <LinhaTabela
+                      label="Lucro"
+                      c1={fmtK(resultado.lucro)}
+                      c2={fmtK(calc.lucroVolta)}
+                      c3={fmtK(calc.lucroTotal)}
+                      destaqueCor={calc.lucroTotal >= 0 ? colors.success : colors.danger}
+                    />
+                    <LinhaTabela
+                      label="Margem"
+                      c1={fmtPct(resultado.margemReal)}
+                      c2={fmtPct(calc.margemVolta)}
+                      c3={fmtPct(calc.margemTotal)}
+                      destaqueCor={calc.lucroTotal >= 0 ? colors.primary : colors.danger}
+                    />
                   </View>
 
-                  {calc.tipoCalculo === 'cheio' && (
-                    <View style={styles.explicacaoBox}>
-                      <Text style={styles.explicacaoTexto}>
-                        A volta já estava paga nos custos do frete de ida. Esse valor entra direto no bolso — é 100% lucro.
-                      </Text>
-                    </View>
-                  )}
-
-                  {calc.tipoCalculo === 'delta' && calc.deltaKm !== undefined && calc.custoDelta !== undefined && (
-                    <View style={styles.explicacaoBox}>
-                      <Text style={styles.explicacaoTexto}>
-                        A volta já estava paga no frete de ida, mas você vai rodar{' '}
-                        <Text style={{ color: colors.warning, fontWeight: '700' }}>
-                          {calc.deltaKm} km a mais
-                        </Text>{' '}
-                        do que cobriu. Isso custou{' '}
-                        <Text style={{ color: colors.danger, fontWeight: '700' }}>
-                          {formatCurrency(calc.custoDelta)}
-                        </Text>{' '}
-                        extra (diesel, manutenção, pneus e depreciação).
-                      </Text>
-                    </View>
-                  )}
-
-                  {calc.lucroExtra < 0 && (
-                    <View style={[styles.explicacaoBox, { borderColor: colors.danger }]}>
-                      <Text style={[styles.explicacaoTexto, { color: colors.danger }]}>
-                        O custo extra da rota seria maior que o valor do frete. Esse frete de volta não compensa.
-                      </Text>
-                    </View>
-                  )}
+                  <View style={styles.fraseBox}>
+                    <Text style={styles.fraseTexto}>{fraseDContexto(calc)}</Text>
+                  </View>
 
                   <TouchableOpacity style={styles.calcBtn} onPress={fechar} activeOpacity={0.85}>
                     <Text style={styles.calcBtnTexto}>Fechar</Text>
@@ -552,35 +635,71 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  resultCard: {
-    borderRadius: 14,
-    borderWidth: 2,
-    padding: 20,
+  // Tabela comparativa
+  tabela: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  tabelaLinha: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 11,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  tabelaLinhaHeader: {
     backgroundColor: colors.surfaceElevated,
+    paddingVertical: 8,
   },
-  resultLabel: {
-    color: colors.textSecondary,
-    fontSize: 12,
+  thLabel: {
+    width: 58,
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 6,
+    letterSpacing: 0.3,
   },
-  resultValor: {
-    fontSize: 36,
-    fontWeight: '900',
-    letterSpacing: -0.5,
+  thCel: {
+    flex: 1,
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    textAlign: 'center',
+  },
+  tdLabel: {
+    width: 58,
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  tdCel: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  tdCelTotal: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '800',
+    textAlign: 'center',
   },
 
-  explicacaoBox: {
+  // Frase de contexto
+  fraseBox: {
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 10,
     padding: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.surfaceElevated,
   },
-  explicacaoTexto: {
-    color: colors.textSecondary,
+  fraseTexto: {
+    color: colors.text,
     fontSize: 14,
     lineHeight: 21,
   },
