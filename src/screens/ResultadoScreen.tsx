@@ -155,12 +155,6 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
           </TouchableOpacity>
         )}
 
-        <SimularRetornoModal
-          visible={modalAberto}
-          onClose={() => setModalAberto(false)}
-          resultado={resultado}
-        />
-
         {/* EXPLORADOR DE MARGEM */}
         <View style={styles.card}>
           <SliderMargem
@@ -225,6 +219,12 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
 
         <View style={{ height: 24 }} />
       </ScrollView>
+
+      <SimularRetornoModal
+        visible={modalAberto}
+        onClose={() => setModalAberto(false)}
+        resultado={resultado}
+      />
     </SafeAreaView>
   );
 }
