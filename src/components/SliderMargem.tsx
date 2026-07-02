@@ -16,7 +16,7 @@ interface Props {
 
 function getZona(freteNecessario: number, margem: number, pisoANTT: number, margemDesejada: number): Zona {
   if (freteNecessario < pisoANTT) return 'VERMELHA';
-  if (margem < margemDesejada) return 'AMARELA';
+  if (margem <= 0 || margem < margemDesejada) return 'AMARELA';
   return 'VERDE';
 }
 
@@ -32,12 +32,12 @@ const BG_ZONA: Record<Zona, string> = {
   VERMELHA: colors.dangerBg,
 };
 
-export function SliderMargem({ custoTotal, valorFrete, margemInicial, pisoANTT, margemDesejada }: Props) {
-  const [margem, setMargem] = useState(Math.min(50, Math.max(0, Math.round(margemInicial))));
+export function SliderMargem({ custoTotal, valorFrete, margemInicial: _margemInicial, pisoANTT, margemDesejada }: Props) {
+  const [margem, setMargem] = useState(0);
   const zonaAnteriorRef = useRef<Zona | null>(null);
 
-  const freteNecessario = margem < 100 ? custoTotal / (1 - margem / 100) : Infinity;
-  const lucroAbsoluto = freteNecessario - custoTotal;
+  const freteNecessario = margem <= 0 ? custoTotal : (margem < 100 ? custoTotal / (1 - margem / 100) : Infinity);
+  const lucroAbsoluto = margem <= 0 ? 0 : freteNecessario - custoTotal;
   const diferenca = freteNecessario - valorFrete;
   const diferencaPositiva = diferenca > 0.005;
   const diferencaNegativa = diferenca < -0.005;

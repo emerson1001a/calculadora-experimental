@@ -164,7 +164,7 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
               </Text>
             </View>
             <View style={[styles.resumoItem, styles.resumoItemLucro]}>
-              <Text style={styles.resumoItemLabel}>Lucro Líquido</Text>
+              <Text style={styles.resumoItemLabel}>Lucro</Text>
               <Text style={[
                 styles.resumoItemValor,
                 styles.resumoItemValorGrande,
