@@ -59,6 +59,7 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
   const [buscaDestino, setBuscaDestino] = useState('');
   const [destinoSelecionado, setDestinoSelecionado] = useState<string | null>(null);
   const [distancia, setDistancia] = useState('');
+  const [distanciaVeioMatriz, setDistanciaVeioMatriz] = useState(false);
 
   // Frete
   const [valorFrete, setValorFrete] = useState('');
@@ -88,22 +89,30 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
 
   // Auto-preenche distância quando ambas cidades estão selecionadas
   useEffect(() => {
-    if (!origemSelecionada || !destinoSelecionado) return;
+    if (!origemSelecionada || !destinoSelecionado) {
+      setDistanciaVeioMatriz(false);
+      return;
+    }
     const dist =
       distancias[origemSelecionada]?.[destinoSelecionado] ??
       distancias[destinoSelecionado]?.[origemSelecionada] ??
       null;
-    if (dist !== null) setDistancia(String(dist));
+    if (dist !== null) {
+      setDistancia(String(dist));
+      setDistanciaVeioMatriz(true);
+    } else {
+      setDistanciaVeioMatriz(false);
+    }
   }, [origemSelecionada, destinoSelecionado]);
 
   const sugestoesOrigem = useMemo(() => {
-    if (buscaOrigem.length < 3 || origemSelecionada) return [];
+    if (buscaOrigem.length < 2 || origemSelecionada) return [];
     const q = buscaOrigem.toLowerCase();
     return cidades.filter(c => c.toLowerCase().includes(q)).slice(0, 6);
   }, [buscaOrigem, origemSelecionada]);
 
   const sugestoesDestino = useMemo(() => {
-    if (buscaDestino.length < 3 || destinoSelecionado) return [];
+    if (buscaDestino.length < 2 || destinoSelecionado) return [];
     const q = buscaDestino.toLowerCase();
     return cidades.filter(c => c.toLowerCase().includes(q)).slice(0, 6);
   }, [buscaDestino, destinoSelecionado]);
@@ -271,7 +280,7 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
                 <View style={styles.perfilInfo}>
                   <Text style={styles.perfilNome}>{perfil.marca} {perfil.modelo}</Text>
                   <Text style={styles.perfilDetalhe}>
-                    {perfil.ano ? `${perfil.ano} · ` : ''}{perfil.tipoCarroceria} · {perfil.dieselKmPorLt} Km/L
+                    {perfil.ano ? `${perfil.ano} · ` : ''}{perfil.tipoCarroceria ? `${perfil.tipoCarroceria} · ` : ''}{perfil.dieselKmPorLt} Km/L
                   </Text>
                 </View>
                 <TouchableOpacity onPress={onEditarPerfil} style={styles.editarBtn} activeOpacity={0.7}>
@@ -345,12 +354,13 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
                 label="Distância"
                 value={distancia}
                 onChangeText={setDistancia}
-                placeholder="0"
+                placeholder={distanciaVeioMatriz ? '' : 'Digite a distância em km'}
                 keyboardType="numeric"
                 suffix="km"
+                editable={!distanciaVeioMatriz}
               />
-              {origemSelecionada && destinoSelecionado && distancia !== '' && (
-                <Text style={styles.distHint}>da tabela de rodovias</Text>
+              {distanciaVeioMatriz && (
+                <Text style={styles.distHint}>✓ preenchida automaticamente</Text>
               )}
             </View>
           </View>

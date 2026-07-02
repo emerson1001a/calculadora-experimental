@@ -1,7 +1,7 @@
 type Rota = readonly [string, string, number];
 
 const rotas: Rota[] = [
-  // São Paulo
+  // São Paulo → capitais e grandes cidades
   ['São Paulo', 'Rio de Janeiro', 430],
   ['São Paulo', 'Belo Horizonte', 586],
   ['São Paulo', 'Curitiba', 408],
@@ -13,6 +13,23 @@ const rotas: Rota[] = [
   ['São Paulo', 'Campo Grande', 1001],
   ['São Paulo', 'Cuiabá', 1618],
   ['São Paulo', 'Vitória', 918],
+  ['São Paulo', 'Recife', 2662],
+  ['São Paulo', 'Fortaleza', 3120],
+  ['São Paulo', 'Natal', 2828],
+  ['São Paulo', 'Belém', 2599],
+  ['São Paulo', 'Manaus', 3859],
+  ['São Paulo', 'Maceió', 2470],
+  ['São Paulo', 'Palmas', 2152],
+  ['São Paulo', 'São Luís', 3020],
+  ['São Paulo', 'Teresina', 2780],
+  ['São Paulo', 'João Pessoa', 2948],
+  ['São Paulo', 'Porto Velho', 3241],
+  ['São Paulo', 'Aracaju', 2222],
+  ['São Paulo', 'Macapá', 3450],
+  ['São Paulo', 'Boa Vista', 4680],
+  ['São Paulo', 'Rio Branco', 3650],
+
+  // São Paulo → interior SP (hubs)
   ['São Paulo', 'Campinas', 100],
   ['São Paulo', 'Santos', 72],
   ['São Paulo', 'Ribeirão Preto', 314],
@@ -24,38 +41,141 @@ const rotas: Rota[] = [
   ['São Paulo', 'São José do Rio Preto', 447],
   ['São Paulo', 'Araçatuba', 519],
   ['São Paulo', 'Araraquara', 271],
+  ['São Paulo', 'Governador Valadares', 791],
+
+  // São Paulo → interior SP (demais cidades)
+  ['São Paulo', 'Americana', 130],
+  ['São Paulo', 'Amparo', 119],
+  ['São Paulo', 'Andradina', 600],
+  ['São Paulo', 'Araras', 160],
+  ['São Paulo', 'Assis', 450],
+  ['São Paulo', 'Atibaia', 78],
+  ['São Paulo', 'Avaré', 253],
+  ['São Paulo', 'Barretos', 381],
+  ['São Paulo', 'Barueri', 26],
+  ['São Paulo', 'Bebedouro', 364],
+  ['São Paulo', 'Birigui', 493],
+  ['São Paulo', 'Botucatu', 228],
+  ['São Paulo', 'Bragança Paulista', 96],
+  ['São Paulo', 'Caçapava', 118],
+  ['São Paulo', 'Campo Limpo Paulista', 57],
+  ['São Paulo', 'Caraguatatuba', 157],
+  ['São Paulo', 'Casa Branca', 247],
+  ['São Paulo', 'Catanduva', 406],
+  ['São Paulo', 'Diadema', 18],
+  ['São Paulo', 'Fernandópolis', 538],
+  ['São Paulo', 'Franca', 397],
+  ['São Paulo', 'Guaratinguetá', 175],
+  ['São Paulo', 'Guarujá', 77],
+  ['São Paulo', 'Guarulhos', 25],
+  ['São Paulo', 'Hortolândia', 107],
+  ['São Paulo', 'Indaiatuba', 105],
+  ['São Paulo', 'Itapetininga', 165],
+  ['São Paulo', 'Itapeva', 261],
+  ['São Paulo', 'Itaquaquecetuba', 43],
+  ['São Paulo', 'Itatiba', 87],
+  ['São Paulo', 'Itu', 100],
+  ['São Paulo', 'Jaboticabal', 358],
+  ['São Paulo', 'Jacareí', 102],
+  ['São Paulo', 'Jales', 563],
+  ['São Paulo', 'Jaú', 293],
+  ['São Paulo', 'Jundiaí', 68],
+  ['São Paulo', 'Leme', 188],
+  ['São Paulo', 'Limeira', 147],
+  ['São Paulo', 'Lins', 376],
+  ['São Paulo', 'Matão', 290],
+  ['São Paulo', 'Mauá', 30],
+  ['São Paulo', 'Mirassol', 434],
+  ['São Paulo', 'Mogi das Cruzes', 65],
+  ['São Paulo', 'Mogi Guaçu', 139],
+  ['São Paulo', 'Mogi Mirim', 131],
+  ['São Paulo', 'Olímpia', 393],
+  ['São Paulo', 'Osasco', 20],
+  ['São Paulo', 'Ourinhos', 436],
+  ['São Paulo', 'Paulínia', 126],
+  ['São Paulo', 'Penápolis', 481],
+  ['São Paulo', 'Piracicaba', 165],
+  ['São Paulo', 'Pirassununga', 212],
+  ['São Paulo', 'Porto Ferreira', 202],
+  ['São Paulo', 'Presidente Epitácio', 626],
+  ['São Paulo', 'Presidente Venceslau', 592],
+  ['São Paulo', 'Rio Claro', 178],
+  ['São Paulo', 'Salto', 107],
+  ["São Paulo", "Santa Bárbara d'Oeste", 130],
+  ['São Paulo', 'Santo André', 28],
+  ['São Paulo', 'São Bernardo do Campo', 21],
+  ['São Paulo', 'São Carlos', 246],
+  ['São Paulo', 'São João da Boa Vista', 226],
+  ['São Paulo', 'São José do Rio Pardo', 243],
+  ['São Paulo', 'Sertãozinho', 309],
+  ['São Paulo', 'Sumaré', 108],
+  ['São Paulo', 'Suzano', 49],
+  ['São Paulo', 'Taubaté', 127],
+  ['São Paulo', 'Tupã', 491],
+  ['São Paulo', 'Ubatuba', 191],
+  ['São Paulo', 'Valinhos', 93],
+  ['São Paulo', 'Vinhedo', 73],
+  ['São Paulo', 'Votuporanga', 499],
+
+  // São Paulo → outras regiões
   ['São Paulo', 'Londrina', 458],
   ['São Paulo', 'Maringá', 543],
   ['São Paulo', 'Cascavel', 668],
   ['São Paulo', 'Foz do Iguaçu', 788],
   ['São Paulo', 'Ponta Grossa', 538],
+  ['São Paulo', 'Apucarana', 492],
+  ['São Paulo', 'Campo Mourão', 593],
+  ['São Paulo', 'Toledo', 713],
   ['São Paulo', 'Joinville', 537],
   ['São Paulo', 'Blumenau', 622],
   ['São Paulo', 'Caxias do Sul', 932],
+  ['São Paulo', 'Chapecó', 856],
+  ['São Paulo', 'Passo Fundo', 1027],
+  ['São Paulo', 'Criciúma', 889],
+  ['São Paulo', 'Itajaí', 632],
+  ['São Paulo', 'Lages', 774],
+  ['São Paulo', 'Jaraguá do Sul', 590],
+  ['São Paulo', 'Pelotas', 1358],
+  ['São Paulo', 'Santa Maria', 1220],
+  ['São Paulo', 'Novo Hamburgo', 1163],
+  ['São Paulo', 'São Leopoldo', 1154],
+  ['São Paulo', 'Uruguaiana', 1735],
+  ['São Paulo', 'Bagé', 1461],
   ['São Paulo', 'Uberlândia', 579],
   ['São Paulo', 'Uberaba', 480],
   ['São Paulo', 'Juiz de Fora', 497],
+  ['São Paulo', 'Montes Claros', 1051],
+  ['São Paulo', 'Betim', 592],
+  ['São Paulo', 'Contagem', 588],
+  ['São Paulo', 'Patos de Minas', 812],
+  ['São Paulo', 'Poços de Caldas', 381],
+  ['São Paulo', 'Varginha', 428],
+  ['São Paulo', 'Divinópolis', 637],
   ['São Paulo', 'Anápolis', 940],
+  ['São Paulo', 'Aparecida de Goiânia', 920],
+  ['São Paulo', 'Rio Verde', 1135],
+  ['São Paulo', 'Caldas Novas', 993],
+  ['São Paulo', 'Itumbiara', 858],
   ['São Paulo', 'Dourados', 1173],
   ['São Paulo', 'Três Lagoas', 780],
-  ['São Paulo', 'Montes Claros', 1051],
   ['São Paulo', 'Rondonópolis', 1619],
-  ['São Paulo', 'Chapecó', 856],
-  ['São Paulo', 'Passo Fundo', 1027],
-  ['São Paulo', 'Recife', 2662],
-  ['São Paulo', 'Fortaleza', 3120],
-  ['São Paulo', 'Natal', 2828],
-  ['São Paulo', 'Belém', 2599],
-  ['São Paulo', 'Manaus', 3859],
-  ['São Paulo', 'Maceió', 2470],
-  ['São Paulo', 'Palmas', 2152],
-  ['São Paulo', 'São Luís', 3020],
-  ['São Paulo', 'Teresina', 2780],
   ['São Paulo', 'Sinop', 2075],
-  ['São Paulo', 'João Pessoa', 2948],
-  ['São Paulo', 'Porto Velho', 3241],
-  ['São Paulo', 'Aracaju', 2222],
-  ['São Paulo', 'Governador Valadares', 791],
+  ['São Paulo', 'Cáceres', 1930],
+  ['São Paulo', 'Lucas do Rio Verde', 2035],
+  ['São Paulo', 'Sorriso', 2108],
+  ['São Paulo', 'Corumbá', 1417],
+  ['São Paulo', 'Feira de Santana', 2050],
+  ['São Paulo', 'Vitória da Conquista', 1965],
+  ['São Paulo', 'Ilhéus', 2412],
+  ['São Paulo', 'Itabuna', 2381],
+  ['São Paulo', 'Barreiras', 2138],
+  ['São Paulo', 'Juazeiro', 2390],
+  ['São Paulo', 'Campos dos Goytacazes', 700],
+  ['São Paulo', 'Volta Redonda', 400],
+  ['São Paulo', 'Petrópolis', 492],
+  ['São Paulo', 'Nova Friburgo', 566],
+  ['São Paulo', 'Cabo Frio', 589],
+  ['São Paulo', 'Macaé', 565],
 
   // Rio de Janeiro
   ['Rio de Janeiro', 'Belo Horizonte', 434],
@@ -80,6 +200,12 @@ const rotas: Rota[] = [
   ['Rio de Janeiro', 'Natal', 2588],
   ['Rio de Janeiro', 'Maceió', 2146],
   ['Rio de Janeiro', 'Palmas', 2286],
+  ['Rio de Janeiro', 'Campos dos Goytacazes', 280],
+  ['Rio de Janeiro', 'Volta Redonda', 131],
+  ['Rio de Janeiro', 'Petrópolis', 69],
+  ['Rio de Janeiro', 'Nova Friburgo', 140],
+  ['Rio de Janeiro', 'Cabo Frio', 168],
+  ['Rio de Janeiro', 'Macaé', 184],
 
   // Belo Horizonte
   ['Belo Horizonte', 'Brasília', 741],
@@ -105,6 +231,12 @@ const rotas: Rota[] = [
   ['Belo Horizonte', 'Florianópolis', 1275],
   ['Belo Horizonte', 'Campo Grande', 1443],
   ['Belo Horizonte', 'Aracaju', 1252],
+  ['Belo Horizonte', 'Betim', 35],
+  ['Belo Horizonte', 'Contagem', 18],
+  ['Belo Horizonte', 'Patos de Minas', 468],
+  ['Belo Horizonte', 'Poços de Caldas', 303],
+  ['Belo Horizonte', 'Varginha', 288],
+  ['Belo Horizonte', 'Divinópolis', 125],
 
   // Curitiba
   ['Curitiba', 'Porto Alegre', 718],
@@ -124,6 +256,13 @@ const rotas: Rota[] = [
   ['Curitiba', 'Goiânia', 1312],
   ['Curitiba', 'Dourados', 1053],
   ['Curitiba', 'Três Lagoas', 1073],
+  ['Curitiba', 'Apucarana', 319],
+  ['Curitiba', 'Campo Mourão', 396],
+  ['Curitiba', 'Toledo', 513],
+  ['Curitiba', 'Itajaí', 212],
+  ['Curitiba', 'Criciúma', 419],
+  ['Curitiba', 'Lages', 331],
+  ['Curitiba', 'Jaraguá do Sul', 167],
 
   // Porto Alegre
   ['Porto Alegre', 'Florianópolis', 476],
@@ -138,6 +277,14 @@ const rotas: Rota[] = [
   ['Porto Alegre', 'Cascavel', 699],
   ['Porto Alegre', 'Maringá', 780],
   ['Porto Alegre', 'Londrina', 835],
+  ['Porto Alegre', 'Pelotas', 249],
+  ['Porto Alegre', 'Santa Maria', 285],
+  ['Porto Alegre', 'Novo Hamburgo', 53],
+  ['Porto Alegre', 'São Leopoldo', 45],
+  ['Porto Alegre', 'Uruguaiana', 635],
+  ['Porto Alegre', 'Bagé', 370],
+  ['Porto Alegre', 'Criciúma', 302],
+  ['Porto Alegre', 'Lages', 407],
 
   // Florianópolis
   ['Florianópolis', 'Joinville', 185],
@@ -146,6 +293,10 @@ const rotas: Rota[] = [
   ['Florianópolis', 'Caxias do Sul', 394],
   ['Florianópolis', 'Passo Fundo', 490],
   ['Florianópolis', 'Campo Grande', 1170],
+  ['Florianópolis', 'Criciúma', 175],
+  ['Florianópolis', 'Itajaí', 93],
+  ['Florianópolis', 'Lages', 252],
+  ['Florianópolis', 'Jaraguá do Sul', 153],
 
   // Brasília
   ['Brasília', 'Goiânia', 209],
@@ -170,6 +321,14 @@ const rotas: Rota[] = [
   ['Brasília', 'Porto Velho', 2875],
   ['Brasília', 'Aracaju', 1633],
   ['Brasília', 'Uberaba', 739],
+  ['Brasília', 'Macapá', 3040],
+  ['Brasília', 'Boa Vista', 4040],
+  ['Brasília', 'Rio Branco', 2886],
+  ['Brasília', 'Rio Verde', 504],
+  ['Brasília', 'Caldas Novas', 330],
+  ['Brasília', 'Itumbiara', 352],
+  ['Brasília', 'Aparecida de Goiânia', 217],
+  ['Brasília', 'Barreiras', 1023],
 
   // Goiânia
   ['Goiânia', 'Anápolis', 55],
@@ -188,6 +347,11 @@ const rotas: Rota[] = [
   ['Goiânia', 'Três Lagoas', 906],
   ['Goiânia', 'Uberaba', 390],
   ['Goiânia', 'São Luís', 2148],
+  ['Goiânia', 'Aparecida de Goiânia', 12],
+  ['Goiânia', 'Rio Verde', 240],
+  ['Goiânia', 'Caldas Novas', 168],
+  ['Goiânia', 'Itumbiara', 196],
+  ['Goiânia', 'Barreiras', 814],
 
   // Campo Grande
   ['Campo Grande', 'Cuiabá', 694],
@@ -200,12 +364,21 @@ const rotas: Rota[] = [
   ['Campo Grande', 'Cascavel', 780],
   ['Campo Grande', 'Sinop', 1386],
   ['Campo Grande', 'Porto Velho', 2190],
+  ['Campo Grande', 'Cáceres', 905],
+  ['Campo Grande', 'Corumbá', 424],
+  ['Campo Grande', 'Lucas do Rio Verde', 870],
+  ['Campo Grande', 'Sorriso', 963],
+  ['Campo Grande', 'Rio Verde', 694],
 
   // Cuiabá
   ['Cuiabá', 'Rondonópolis', 218],
   ['Cuiabá', 'Sinop', 503],
   ['Cuiabá', 'Porto Velho', 1464],
   ['Cuiabá', 'Belém', 2516],
+  ['Cuiabá', 'Cáceres', 218],
+  ['Cuiabá', 'Lucas do Rio Verde', 342],
+  ['Cuiabá', 'Sorriso', 416],
+  ['Cuiabá', 'Corumbá', 993],
 
   // Belém
   ['Belém', 'Manaus', 2550],
@@ -213,6 +386,7 @@ const rotas: Rota[] = [
   ['Belém', 'São Luís', 797],
   ['Belém', 'Fortaleza', 1765],
   ['Belém', 'Teresina', 1098],
+  ['Belém', 'Macapá', 447],
 
   // Salvador
   ['Salvador', 'Recife', 839],
@@ -226,6 +400,12 @@ const rotas: Rota[] = [
   ['Salvador', 'São Luís', 1993],
   ['Salvador', 'Aracaju', 356],
   ['Salvador', 'João Pessoa', 1278],
+  ['Salvador', 'Feira de Santana', 105],
+  ['Salvador', 'Vitória da Conquista', 507],
+  ['Salvador', 'Ilhéus', 459],
+  ['Salvador', 'Itabuna', 426],
+  ['Salvador', 'Barreiras', 879],
+  ['Salvador', 'Juazeiro', 511],
 
   // Recife
   ['Recife', 'Natal', 303],
@@ -235,6 +415,8 @@ const rotas: Rota[] = [
   ['Recife', 'Teresina', 1268],
   ['Recife', 'São Luís', 1781],
   ['Recife', 'Aracaju', 546],
+  ['Recife', 'Feira de Santana', 734],
+  ['Recife', 'Juazeiro', 631],
 
   // Fortaleza
   ['Fortaleza', 'Natal', 537],
@@ -242,6 +424,7 @@ const rotas: Rota[] = [
   ['Fortaleza', 'São Luís', 1071],
   ['Fortaleza', 'João Pessoa', 697],
   ['Fortaleza', 'Maceió', 1004],
+  ['Fortaleza', 'Juazeiro', 965],
 
   // São Luís
   ['São Luís', 'Teresina', 446],
@@ -257,6 +440,7 @@ const rotas: Rota[] = [
   ['Vitória', 'Governador Valadares', 383],
   ['Vitória', 'Juiz de Fora', 630],
   ['Vitória', 'Aracaju', 924],
+  ['Vitória', 'Campos dos Goytacazes', 244],
 
   // Palmas
   ['Palmas', 'Manaus', 2620],
@@ -265,6 +449,11 @@ const rotas: Rota[] = [
 
   // Manaus
   ['Manaus', 'Porto Velho', 897],
+  ['Manaus', 'Boa Vista', 783],
+  ['Manaus', 'Rio Branco', 1096],
+
+  // Porto Velho
+  ['Porto Velho', 'Rio Branco', 544],
 
   // João Pessoa
   ['João Pessoa', 'Natal', 185],
@@ -273,7 +462,7 @@ const rotas: Rota[] = [
   // Maceió
   ['Maceió', 'Aracaju', 291],
 
-  // Interior SP: Campinas
+  // Interior SP: Campinas (cross-connections)
   ['Campinas', 'Ribeirão Preto', 237],
   ['Campinas', 'Santos', 186],
   ['Campinas', 'São José dos Campos', 176],
@@ -284,13 +473,36 @@ const rotas: Rota[] = [
   ['Campinas', 'Uberaba', 406],
   ['Campinas', 'Londrina', 485],
   ['Campinas', 'Maringá', 570],
+  ['Campinas', 'Limeira', 58],
+  ['Campinas', 'Americana', 45],
+  ['Campinas', 'Piracicaba', 80],
+  ['Campinas', 'Rio Claro', 95],
+  ['Campinas', 'Jundiaí', 48],
+  ['Campinas', 'Valinhos', 19],
+  ['Campinas', 'Vinhedo', 25],
+  ['Campinas', 'Indaiatuba', 30],
+  ['Campinas', 'Sumaré', 30],
+  ['Campinas', 'Hortolândia', 30],
+  ['Campinas', 'Paulínia', 30],
+  ['Campinas', 'Mogi Guaçu', 75],
+  ['Campinas', 'Mogi Mirim', 66],
+  ['Campinas', 'Itatiba', 39],
+  ['Campinas', 'Bragança Paulista', 60],
+  ['Campinas', 'Atibaia', 70],
+  ["Campinas", "Santa Bárbara d'Oeste", 35],
+  ['Campinas', 'Amparo', 68],
+  ['Campinas', 'Campo Limpo Paulista', 50],
+  ['Campinas', 'Araras', 77],
+  ['Campinas', 'Porto Ferreira', 104],
+  ['Campinas', 'Pirassununga', 118],
+  ['Campinas', 'Poços de Caldas', 238],
 
   // Interior SP: Santos
   ['Santos', 'São José dos Campos', 163],
   ['Santos', 'Curitiba', 415],
   ['Santos', 'Bauru', 385],
 
-  // Interior SP: Ribeirão Preto
+  // Interior SP: Ribeirão Preto (cross-connections)
   ['Ribeirão Preto', 'Araraquara', 76],
   ['Ribeirão Preto', 'Uberlândia', 240],
   ['Ribeirão Preto', 'Uberaba', 257],
@@ -298,11 +510,39 @@ const rotas: Rota[] = [
   ['Ribeirão Preto', 'Marília', 260],
   ['Ribeirão Preto', 'São José do Rio Preto', 192],
   ['Ribeirão Preto', 'Goiânia', 748],
+  ['Ribeirão Preto', 'Franca', 98],
+  ['Ribeirão Preto', 'Sertãozinho', 27],
+  ['Ribeirão Preto', 'Jaboticabal', 65],
+  ['Ribeirão Preto', 'Bebedouro', 77],
+  ['Ribeirão Preto', 'Barretos', 103],
+  ['Ribeirão Preto', 'São Carlos', 90],
+  ['Ribeirão Preto', 'Matão', 98],
+  ['Ribeirão Preto', 'Pirassununga', 136],
+  ['Ribeirão Preto', 'São João da Boa Vista', 181],
+  ['Ribeirão Preto', 'Olímpia', 170],
+  ['Ribeirão Preto', 'Catanduva', 177],
 
-  // Interior SP: São José dos Campos
+  // Interior SP: São José dos Campos (cross-connections)
   ['São José dos Campos', 'Sorocaba', 176],
+  ['São José dos Campos', 'Taubaté', 31],
+  ['São José dos Campos', 'Jacareí', 21],
+  ['São José dos Campos', 'Caçapava', 25],
+  ['São José dos Campos', 'Guaratinguetá', 85],
+  ['São José dos Campos', 'Ubatuba', 87],
+  ['São José dos Campos', 'Caraguatatuba', 77],
+  ['São José dos Campos', 'Guarulhos', 72],
+  ['São José dos Campos', 'Mogi das Cruzes', 64],
 
-  // Interior SP: Bauru
+  // Interior SP: Sorocaba (cross-connections)
+  ['Sorocaba', 'Itu', 27],
+  ['Sorocaba', 'Salto', 22],
+  ['Sorocaba', 'Itapetininga', 73],
+  ['Sorocaba', 'Botucatu', 107],
+  ['Sorocaba', 'Piracicaba', 90],
+  ['Sorocaba', 'Itapeva', 155],
+  ['Sorocaba', 'Indaiatuba', 50],
+
+  // Interior SP: Bauru (cross-connections)
   ['Bauru', 'Marília', 113],
   ['Bauru', 'Presidente Prudente', 255],
   ['Bauru', 'Araçatuba', 175],
@@ -311,32 +551,56 @@ const rotas: Rota[] = [
   ['Bauru', 'Londrina', 388],
   ['Bauru', 'Campo Grande', 651],
   ['Bauru', 'Três Lagoas', 382],
+  ['Bauru', 'Jaú', 59],
+  ['Bauru', 'Lins', 73],
+  ['Bauru', 'Botucatu', 90],
+  ['Bauru', 'São Carlos', 113],
 
-  // Interior SP: Marília
+  // Interior SP: Marília (cross-connections)
   ['Marília', 'Presidente Prudente', 166],
   ['Marília', 'Araçatuba', 235],
   ['Marília', 'São José do Rio Preto', 260],
   ['Marília', 'Campo Grande', 614],
+  ['Marília', 'Assis', 123],
+  ['Marília', 'Ourinhos', 129],
+  ['Marília', 'Tupã', 78],
+  ['Marília', 'Lins', 115],
 
-  // Interior SP: Presidente Prudente
+  // Interior SP: Presidente Prudente (cross-connections)
   ['Presidente Prudente', 'Araçatuba', 258],
   ['Presidente Prudente', 'Campo Grande', 530],
   ['Presidente Prudente', 'Cascavel', 397],
   ['Presidente Prudente', 'São José do Rio Preto', 285],
   ['Presidente Prudente', 'Londrina', 336],
   ['Presidente Prudente', 'Dourados', 629],
+  ['Presidente Prudente', 'Presidente Venceslau', 66],
+  ['Presidente Prudente', 'Presidente Epitácio', 108],
+  ['Presidente Prudente', 'Assis', 206],
 
-  // Interior SP: São José do Rio Preto
+  // Interior SP: São José do Rio Preto (cross-connections)
   ['São José do Rio Preto', 'Araçatuba', 128],
   ['São José do Rio Preto', 'Uberlândia', 369],
   ['São José do Rio Preto', 'Goiânia', 630],
   ['São José do Rio Preto', 'Campo Grande', 680],
   ['São José do Rio Preto', 'Três Lagoas', 463],
+  ['São José do Rio Preto', 'Mirassol', 18],
+  ['São José do Rio Preto', 'Catanduva', 78],
+  ['São José do Rio Preto', 'Votuporanga', 104],
+  ['São José do Rio Preto', 'Fernandópolis', 133],
+  ['São José do Rio Preto', 'Jales', 161],
+  ['São José do Rio Preto', 'Olímpia', 76],
+  ['São José do Rio Preto', 'Bebedouro', 135],
+  ['São José do Rio Preto', 'Barretos', 109],
 
-  // Interior SP: Araçatuba
+  // Interior SP: Araçatuba (cross-connections)
   ['Araçatuba', 'Campo Grande', 492],
   ['Araçatuba', 'Três Lagoas', 322],
   ['Araçatuba', 'Dourados', 696],
+  ['Araçatuba', 'Birigui', 38],
+  ['Araçatuba', 'Penápolis', 54],
+  ['Araçatuba', 'Andradina', 140],
+  ['Araçatuba', 'Presidente Epitácio', 257],
+  ['Araçatuba', 'Presidente Venceslau', 223],
 
   // Interior MG
   ['Uberlândia', 'Uberaba', 105],
@@ -345,6 +609,9 @@ const rotas: Rota[] = [
   ['Uberlândia', 'Campo Grande', 1169],
   ['Uberlândia', 'Três Lagoas', 718],
   ['Uberlândia', 'Ribeirão Preto', 240],
+  ['Uberlândia', 'Patos de Minas', 221],
+  ['Uberlândia', 'Itumbiara', 92],
+  ['Uberlândia', 'Caldas Novas', 216],
 
   ['Uberaba', 'Anápolis', 585],
   ['Uberaba', 'Goiânia', 390],
@@ -354,8 +621,13 @@ const rotas: Rota[] = [
   ['Montes Claros', 'Teresina', 1569],
 
   ['Juiz de Fora', 'Vitória', 630],
+  ['Juiz de Fora', 'Volta Redonda', 136],
 
   ['Governador Valadares', 'Vitória', 383],
+
+  ['Poços de Caldas', 'Varginha', 132],
+  ['Varginha', 'Divinópolis', 163],
+  ['Betim', 'Contagem', 15],
 
   // Interior PR
   ['Londrina', 'Maringá', 107],
@@ -363,21 +635,30 @@ const rotas: Rota[] = [
   ['Londrina', 'Foz do Iguaçu', 400],
   ['Londrina', 'Ponta Grossa', 260],
   ['Londrina', 'Dourados', 456],
+  ['Londrina', 'Apucarana', 54],
+  ['Londrina', 'Campo Mourão', 156],
+  ['Londrina', 'Toledo', 293],
 
   ['Maringá', 'Cascavel', 246],
   ['Maringá', 'Foz do Iguaçu', 352],
   ['Maringá', 'Ponta Grossa', 313],
   ['Maringá', 'Dourados', 480],
+  ['Maringá', 'Apucarana', 91],
+  ['Maringá', 'Campo Mourão', 104],
+  ['Maringá', 'Toledo', 163],
 
   ['Cascavel', 'Foz do Iguaçu', 148],
   ['Cascavel', 'Ponta Grossa', 416],
   ['Cascavel', 'Chapecó', 295],
   ['Cascavel', 'Dourados', 571],
+  ['Cascavel', 'Toledo', 43],
+  ['Cascavel', 'Campo Mourão', 135],
 
   ['Foz do Iguaçu', 'Porto Alegre', 870],
   ['Foz do Iguaçu', 'Florianópolis', 648],
   ['Foz do Iguaçu', 'Chapecó', 340],
   ['Foz do Iguaçu', 'Dourados', 450],
+  ['Foz do Iguaçu', 'Toledo', 200],
 
   ['Ponta Grossa', 'Joinville', 266],
   ['Ponta Grossa', 'Blumenau', 262],
@@ -385,27 +666,78 @@ const rotas: Rota[] = [
   // Interior SC
   ['Joinville', 'Blumenau', 79],
   ['Joinville', 'Chapecó', 452],
+  ['Joinville', 'Itajaí', 87],
+  ['Joinville', 'Jaraguá do Sul', 34],
+  ['Joinville', 'Lages', 236],
+  ['Joinville', 'Criciúma', 346],
 
   ['Blumenau', 'Chapecó', 380],
+  ['Blumenau', 'Itajaí', 58],
+  ['Blumenau', 'Jaraguá do Sul', 47],
+  ['Blumenau', 'Lages', 197],
+  ['Blumenau', 'Criciúma', 286],
 
   ['Chapecó', 'Passo Fundo', 250],
   ['Chapecó', 'Caxias do Sul', 380],
+  ['Chapecó', 'Lages', 355],
+
+  ['Itajaí', 'Jaraguá do Sul', 55],
+  ['Criciúma', 'Lages', 192],
 
   // Interior RS
   ['Caxias do Sul', 'Passo Fundo', 173],
+  ['Caxias do Sul', 'Pelotas', 388],
+  ['Caxias do Sul', 'Santa Maria', 202],
+  ['Caxias do Sul', 'Novo Hamburgo', 82],
+  ['Caxias do Sul', 'São Leopoldo', 79],
 
-  // Interior GO
+  ['Pelotas', 'Bagé', 111],
+  ['Pelotas', 'Uruguaiana', 585],
+
+  ['Santa Maria', 'Uruguaiana', 373],
+  ['Santa Maria', 'Bagé', 260],
+  ['Santa Maria', 'Passo Fundo', 202],
+
+  ['Novo Hamburgo', 'São Leopoldo', 10],
+
+  // Interior RJ
+  ['Campos dos Goytacazes', 'Macaé', 99],
+  ['Campos dos Goytacazes', 'Cabo Frio', 215],
+  ['Volta Redonda', 'Petrópolis', 72],
+  ['Petrópolis', 'Nova Friburgo', 80],
+  ['Cabo Frio', 'Macaé', 93],
+
+  // Interior GO/DF
   ['Anápolis', 'Palmas', 983],
+  ['Anápolis', 'Aparecida de Goiânia', 60],
+  ['Anápolis', 'Rio Verde', 288],
+  ['Anápolis', 'Itumbiara', 245],
 
-  // Interior MT
+  ['Caldas Novas', 'Itumbiara', 125],
+
+  // Interior MT/MS
   ['Rondonópolis', 'Sinop', 497],
   ['Rondonópolis', 'Porto Velho', 1310],
+  ['Rondonópolis', 'Lucas do Rio Verde', 368],
+  ['Rondonópolis', 'Sorriso', 444],
 
   ['Sinop', 'Belém', 2085],
   ['Sinop', 'Porto Velho', 1116],
+  ['Sinop', 'Sorriso', 78],
+  ['Sinop', 'Lucas do Rio Verde', 165],
 
-  // Interior MS
   ['Dourados', 'Três Lagoas', 545],
+  ['Três Lagoas', 'Presidente Epitácio', 300],
+
+  // Interior BA
+  ['Feira de Santana', 'Aracaju', 453],
+  ['Feira de Santana', 'Vitória da Conquista', 431],
+  ['Feira de Santana', 'Juazeiro', 413],
+
+  ['Vitória da Conquista', 'Ilhéus', 225],
+  ['Vitória da Conquista', 'Itabuna', 197],
+
+  ['Itabuna', 'Ilhéus', 55],
 ];
 
 export const distancias: Record<string, Record<string, number>> = {};
@@ -418,3 +750,7 @@ for (const [a, b, d] of rotas) {
 }
 
 export const cidades = Object.keys(distancias).sort();
+
+export function getDistancia(origem: string, destino: string): number | null {
+  return distancias[origem]?.[destino] ?? distancias[destino]?.[origem] ?? null;
+}
