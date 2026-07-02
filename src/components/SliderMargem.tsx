@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef, useReducer } from 'react';
 import { View, Text, StyleSheet, Vibration } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { colors } from '../theme/colors';
@@ -33,8 +33,11 @@ const BG_ZONA: Record<Zona, string> = {
 };
 
 export function SliderMargem({ custoTotal, valorFrete, margemInicial: _margemInicial, pisoANTT, margemDesejada }: Props) {
-  const [margem, setMargem] = useState(0);
+  const margemRef = useRef(0);
+  const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
   const zonaAnteriorRef = useRef<Zona | null>(null);
+
+  const margem = margemRef.current;
 
   const freteNecessario = margem <= 0 ? custoTotal : (margem < 100 ? custoTotal / (1 - margem / 100) : Infinity);
   const lucroAbsoluto = margem <= 0 ? 0 : freteNecessario - custoTotal;
@@ -64,7 +67,8 @@ export function SliderMargem({ custoTotal, valorFrete, margemInicial: _margemIni
       }
     }
     zonaAnteriorRef.current = novaZona;
-    setMargem(novo);
+    margemRef.current = novo;
+    forceUpdate();
   }
 
   return (
@@ -80,7 +84,6 @@ export function SliderMargem({ custoTotal, valorFrete, margemInicial: _margemIni
         style={styles.slider}
         minimumValue={0}
         maximumValue={50}
-        value={margem}
         onValueChange={handleValueChange}
         minimumTrackTintColor={cor}
         maximumTrackTintColor={colors.border}
