@@ -14,8 +14,8 @@ interface Props {
   margemDesejada: number;
 }
 
-function getZona(freteNecessario: number, margem: number, pisoANTT: number, margemDesejada: number): Zona {
-  if (freteNecessario < pisoANTT) return 'VERMELHA';
+function getZona(freteNecessario: number, margem: number, pisoANTT: number, margemDesejada: number, valorFrete: number): Zona {
+  if (valorFrete < pisoANTT || freteNecessario < pisoANTT) return 'VERMELHA';
   if (margem <= 0 || margem < margemDesejada) return 'AMARELA';
   return 'VERDE';
 }
@@ -42,7 +42,7 @@ export function SliderMargem({ custoTotal, valorFrete, margemInicial: _margemIni
   const diferencaPositiva = diferenca > 0.005;
   const diferencaNegativa = diferenca < -0.005;
 
-  const zona = getZona(freteNecessario, margem, pisoANTT, margemDesejada);
+  const zona = getZona(freteNecessario, margem, pisoANTT, margemDesejada, valorFrete);
   const cor = COR_ZONA[zona];
   const bg = BG_ZONA[zona];
 
@@ -54,7 +54,7 @@ export function SliderMargem({ custoTotal, valorFrete, margemInicial: _margemIni
   function handleValueChange(v: number) {
     const novo = Math.round(v);
     const novoFrete = novo < 100 ? custoTotal / (1 - novo / 100) : Infinity;
-    const novaZona = getZona(novoFrete, novo, pisoANTT, margemDesejada);
+    const novaZona = getZona(novoFrete, novo, pisoANTT, margemDesejada, valorFrete);
 
     if (zonaAnteriorRef.current !== null) {
       if (zonaAnteriorRef.current !== 'VERMELHA' && novaZona === 'VERMELHA') {
@@ -81,7 +81,6 @@ export function SliderMargem({ custoTotal, valorFrete, margemInicial: _margemIni
         minimumValue={0}
         maximumValue={50}
         step={1}
-        value={margem}
         onValueChange={handleValueChange}
         minimumTrackTintColor={cor}
         maximumTrackTintColor={colors.border}
