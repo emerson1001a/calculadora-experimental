@@ -12,6 +12,8 @@ interface Props {
   margemInicial: number;
   pisoANTT: number;
   margemDesejada: number;
+  onSlidingStart?: () => void;
+  onSlidingComplete?: () => void;
 }
 
 function getZona(freteNecessario: number, margem: number, pisoANTT: number, margemDesejada: number, valorFrete: number): Zona {
@@ -32,7 +34,7 @@ const BG_ZONA: Record<Zona, string> = {
   VERMELHA: colors.dangerBg,
 };
 
-export function SliderMargem({ custoTotal, valorFrete, margemInicial: _margemInicial, pisoANTT, margemDesejada }: Props) {
+export function SliderMargem({ custoTotal, valorFrete, margemInicial: _margemInicial, pisoANTT, margemDesejada, onSlidingStart, onSlidingComplete }: Props) {
   const margemRef = useRef(0);
   const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
   const zonaAnteriorRef = useRef<Zona | null>(null);
@@ -85,6 +87,8 @@ export function SliderMargem({ custoTotal, valorFrete, margemInicial: _margemIni
         minimumValue={0}
         maximumValue={50}
         onValueChange={handleValueChange}
+        onSlidingStart={onSlidingStart}
+        onSlidingComplete={onSlidingComplete}
         minimumTrackTintColor={cor}
         maximumTrackTintColor={colors.border}
         thumbTintColor={cor}

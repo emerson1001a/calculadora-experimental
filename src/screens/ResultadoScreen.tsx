@@ -115,6 +115,7 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
   const temRetorno = entrada.tipoRetorno !== 'nenhum';
   const distTotal = entrada.distanciaKm * (temRetorno ? 2 : 1);
   const [modalAberto, setModalAberto] = useState(false);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
   const conselhos = obterConselhos(resultado);
 
   return (
@@ -135,7 +136,7 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
         </View>
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} scrollEnabled={scrollEnabled}>
 
         {/* VEREDITO */}
         <View style={[styles.veredito, { backgroundColor: cfg.bg, borderColor: cfg.color }]}>
@@ -211,6 +212,8 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
             margemInicial={margemReal}
             pisoANTT={pisoANTT}
             margemDesejada={entrada.margemDesejada}
+            onSlidingStart={() => setScrollEnabled(false)}
+            onSlidingComplete={() => setScrollEnabled(true)}
           />
         </View>
 
