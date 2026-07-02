@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,16 +9,39 @@ import {
   Platform,
   StyleSheet,
   Alert,
+  Vibration,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Slider from '@react-native-community/slider';
 import { InputField } from '../components/InputField';
 import { CustoRow } from '../components/CustoRow';
 import { calcularFrete } from '../engine/calcularFrete';
 import { colors } from '../theme/colors';
-import { parseNumber } from '../utils/format';
+import { parseNumber, formatCurrency } from '../utils/format';
 import { carregarPerfil } from '../utils/storage';
 import { distancias, cidades } from '../data/distancias';
 import type { ResultadoFrete, TipoRetorno, PerfilCaminhao } from '../types';
+
+type Zona = 'VERDE' | 'AMARELA' | 'VERMELHA';
+
+const ANTT_PISO_POR_KM = 3.2;
+
+function getZonaNegociar(freteMin: number, margemSlider: number, pisoANTT: number, margemDesejada: number): Zona {
+  if (freteMin < pisoANTT) return 'VERMELHA';
+  if (margemSlider < margemDesejada) return 'AMARELA';
+  return 'VERDE';
+}
+
+const COR_ZONA: Record<Zona, string> = {
+  VERDE: colors.success,
+  AMARELA: colors.warning,
+  VERMELHA: colors.danger,
+};
+const BG_ZONA: Record<Zona, string> = {
+  VERDE: colors.successBg,
+  AMARELA: colors.warningBg,
+  VERMELHA: colors.dangerBg,
+};
 
 interface Props {
   onCalcular: (resultado: ResultadoFrete) => void;
@@ -41,6 +64,11 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
   const [valorFrete, setValorFrete] = useState('');
   const [margem, setMargem] = useState('15');
   const [tipoRetorno, setTipoRetorno] = useState<TipoRetorno>('nenhum');
+
+  // Modo "A negociar"
+  const [aNegociar, setANegociar] = useState(false);
+  const [margemNegociar, setMargemNegociar] = useState(15);
+  const zonaAnteriorRef = useRef<Zona | null>(null);
 
   // Custos da viagem
   const [pedagio, setPedagio] = useState('150');
@@ -80,6 +108,45 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
     return cidades.filter(c => c.toLowerCase().includes(q)).slice(0, 6);
   }, [buscaDestino, destinoSelecionado]);
 
+  // Cálculo em tempo real para modo "A negociar"
+  const pisoANTTEstimado = useMemo(() => parseNumber(distancia) * ANTT_PISO_POR_KM, [distancia]);
+
+  const custoEstimado = useMemo<number | null>(() => {
+    if (!perfil) return null;
+    const dist = parseNumber(distancia);
+    if (dist <= 0) return null;
+    const temRetorno = tipoRetorno !== 'nenhum';
+    const fatorKm = temRetorno ? 2 : 1;
+    const distTotal = dist * fatorKm;
+    const nDiarias = parseNumber(numeroDiarias);
+    const diesel = (parseNumber(precoDiesel) / perfil.dieselKmPorLt) * distTotal;
+    const arla = (parseNumber(precoArla) / perfil.arlaKmPorLt) * distTotal;
+    const pedagioTotal = !temRetorno
+      ? parseNumber(pedagio)
+      : tipoRetorno === 'vazio'
+      ? parseNumber(pedagio) * 2
+      : parseNumber(pedagio) + parseNumber(pedagioVolta);
+    return (
+      diesel + arla + pedagioTotal
+      + nDiarias * parseNumber(alimentacaoPorDia)
+      + nDiarias * parseNumber(hospedagemPorDiaria)
+      + perfil.manutencaoPorKm * distTotal
+      + perfil.pneusPorKm * distTotal
+      + perfil.depreciacaoPorKm * distTotal
+    );
+  }, [perfil, distancia, tipoRetorno, precoDiesel, precoArla, pedagio, pedagioVolta, numeroDiarias, alimentacaoPorDia, hospedagemPorDiaria]);
+
+  const freteMinimo = useMemo<number | null>(() => {
+    if (custoEstimado === null || margemNegociar >= 100) return null;
+    return custoEstimado / (1 - margemNegociar / 100);
+  }, [custoEstimado, margemNegociar]);
+
+  const margemDesejadaNum = parseNumber(margem) || 15;
+
+  const zonaNegociar: Zona = freteMinimo === null || !isFinite(freteMinimo)
+    ? 'VERDE'
+    : getZonaNegociar(freteMinimo, margemNegociar, pisoANTTEstimado, margemDesejadaNum);
+
   function selecionarOrigem(cidade: string) {
     setOrigemSelecionada(cidade);
     setBuscaOrigem(cidade);
@@ -90,6 +157,32 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
     setBuscaDestino(cidade);
   }
 
+  function toggleANegociar() {
+    if (!aNegociar) {
+      const m = Math.min(50, Math.max(0, Math.round(parseNumber(margem)) || 15));
+      setMargemNegociar(m);
+      zonaAnteriorRef.current = null;
+    }
+    setANegociar(v => !v);
+  }
+
+  function handleMargemNegociarChange(v: number) {
+    const novo = Math.round(v);
+    if (freteMinimo !== null && isFinite(freteMinimo)) {
+      const novoFrete = custoEstimado !== null ? custoEstimado / (1 - novo / 100) : 0;
+      const novaZona = getZonaNegociar(novoFrete, novo, pisoANTTEstimado, margemDesejadaNum);
+      if (zonaAnteriorRef.current !== null) {
+        if (zonaAnteriorRef.current !== 'VERMELHA' && novaZona === 'VERMELHA') {
+          Vibration.vibrate(300);
+        } else if (zonaAnteriorRef.current === 'VERMELHA' && novaZona !== 'VERMELHA') {
+          Vibration.vibrate(100);
+        }
+      }
+      zonaAnteriorRef.current = novaZona;
+    }
+    setMargemNegociar(novo);
+  }
+
   function handleCalcular() {
     if (!perfil) {
       Alert.alert('Perfil não cadastrado', 'Cadastre seu caminhão antes de calcular.');
@@ -97,15 +190,28 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
     }
 
     const dist = parseNumber(distancia);
-    const valor = parseNumber(valorFrete);
-
     if (dist <= 0) {
       Alert.alert('Campo obrigatório', 'Informe a distância em km.');
       return;
     }
-    if (valor <= 0) {
-      Alert.alert('Campo obrigatório', 'Informe o valor do frete.');
-      return;
+
+    let valor: number;
+    let margemUsada: number;
+
+    if (aNegociar) {
+      if (freteMinimo === null || freteMinimo <= 0 || !isFinite(freteMinimo)) {
+        Alert.alert('Dados incompletos', 'Preencha os custos e a distância para calcular o frete mínimo.');
+        return;
+      }
+      valor = freteMinimo;
+      margemUsada = margemNegociar;
+    } else {
+      valor = parseNumber(valorFrete);
+      if (valor <= 0) {
+        Alert.alert('Campo obrigatório', 'Informe o valor do frete.');
+        return;
+      }
+      margemUsada = parseNumber(margem);
     }
 
     const nDiarias = parseNumber(numeroDiarias);
@@ -116,7 +222,7 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
       distanciaKm: dist,
       valorFrete: valor,
       tipoRetorno,
-      margemDesejada: parseNumber(margem),
+      margemDesejada: margemUsada,
       custos: {
         dieselKmPorLt: perfil.dieselKmPorLt,
         dieselPrecoPorLitro: parseNumber(precoDiesel),
@@ -134,6 +240,13 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
 
     onCalcular(resultado);
   }
+
+  const corZona = COR_ZONA[zonaNegociar];
+  const bgZona = BG_ZONA[zonaNegociar];
+  const mensagemZona =
+    zonaNegociar === 'VERDE' ? '✓ Dentro da sua margem e acima do mínimo legal'
+    : zonaNegociar === 'AMARELA' ? '⚠ Abaixo da sua margem desejada, mas ainda legal'
+    : `🚨 Abaixo do mínimo legal da ANTT (${formatCurrency(pisoANTTEstimado)})`;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -245,14 +358,89 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
           {/* FRETE */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Frete</Text>
-            <InputField
-              label="Valor ofertado"
-              value={valorFrete}
-              onChangeText={setValorFrete}
-              placeholder="0,00"
-              keyboardType="decimal-pad"
-              prefix="R$"
-            />
+
+            {/* Campo valor com botão "A negociar" */}
+            <View style={styles.freteValorHeader}>
+              <Text style={styles.freteValorLabel}>Valor ofertado</Text>
+              <TouchableOpacity
+                style={[styles.aNegociarBtn, aNegociar && styles.aNegociarBtnAtivo]}
+                onPress={toggleANegociar}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.aNegociarBtnText, aNegociar && styles.aNegociarBtnTextAtivo]}>
+                  {aNegociar ? '✕ A negociar' : 'A negociar'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <View style={[styles.freteValorInput, aNegociar && styles.freteValorInputDisabled]}>
+              <Text style={styles.freteValorPrefix}>R$</Text>
+              <TextInput
+                style={styles.freteValorText}
+                value={valorFrete}
+                onChangeText={setValorFrete}
+                placeholder="0,00"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="decimal-pad"
+                editable={!aNegociar}
+              />
+            </View>
+
+            {/* Painel "A negociar" */}
+            {aNegociar && (
+              <View style={styles.aNegociarPanel}>
+                {!perfil ? (
+                  <Text style={styles.aNegociarHint}>
+                    Cadastre seu caminhão para calcular o frete mínimo
+                  </Text>
+                ) : custoEstimado === null ? (
+                  <Text style={styles.aNegociarHint}>
+                    Informe a distância para ver o frete mínimo
+                  </Text>
+                ) : (
+                  <>
+                    <View style={styles.aNegociarSliderCabecalho}>
+                      <Text style={styles.aNegociarSliderTitulo}>Margem alvo</Text>
+                      <View style={[styles.aNegociarMargemBadge, { backgroundColor: bgZona, borderColor: corZona }]}>
+                        <Text style={[styles.aNegociarMargemValor, { color: corZona }]}>{margemNegociar}%</Text>
+                      </View>
+                    </View>
+
+                    <Slider
+                      style={styles.aNegociarSlider}
+                      minimumValue={0}
+                      maximumValue={50}
+                      step={1}
+                      value={margemNegociar}
+                      onValueChange={handleMargemNegociarChange}
+                      minimumTrackTintColor={corZona}
+                      maximumTrackTintColor={colors.border}
+                      thumbTintColor={corZona}
+                    />
+
+                    <View style={styles.aNegociarSliderLabels}>
+                      <Text style={styles.aNegociarSliderLabelTexto}>0%</Text>
+                      <Text style={styles.aNegociarSliderLabelTexto}>50%</Text>
+                    </View>
+
+                    <View style={[styles.aNegociarZonaRow, { backgroundColor: bgZona, borderColor: corZona }]}>
+                      <Text style={[styles.aNegociarZonaTexto, { color: corZona }]}>{mensagemZona}</Text>
+                    </View>
+
+                    <View style={[styles.aNegociarResultado, { borderColor: corZona }]}>
+                      <Text style={styles.aNegociarResultadoLabel}>
+                        Para sua margem de {margemNegociar}%, o frete mínimo é
+                      </Text>
+                      <Text style={[styles.aNegociarResultadoValor, { color: corZona }]}>
+                        {freteMinimo !== null && isFinite(freteMinimo)
+                          ? formatCurrency(freteMinimo)
+                          : '—'}
+                      </Text>
+                    </View>
+                  </>
+                )}
+              </View>
+            )}
+
             <InputField
               label="Margem desejada"
               value={margem}
@@ -278,12 +466,7 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
                       onPress={() => setTipoRetorno(opcao)}
                       activeOpacity={0.7}
                     >
-                      <Text
-                        style={[
-                          styles.retornoOpcaoTexto,
-                          ativo && styles.retornoOpcaoTextoAtivo,
-                        ]}
-                      >
+                      <Text style={[styles.retornoOpcaoTexto, ativo && styles.retornoOpcaoTextoAtivo]}>
                         {labels[opcao]}
                       </Text>
                     </TouchableOpacity>
@@ -381,7 +564,7 @@ const styles = StyleSheet.create({
   appTitle: {
     color: colors.primary,
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     letterSpacing: 0.5,
   },
   appSubtitle: {
@@ -399,7 +582,7 @@ const styles = StyleSheet.create({
 
   // Perfil card
   perfilCard: {
-    flexDirection: 'row',
+    flexDirection: 'row' as const,
     alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: 12,
@@ -413,7 +596,7 @@ const styles = StyleSheet.create({
   perfilNome: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '700' as const,
   },
   perfilDetalhe: {
     color: colors.textSecondary,
@@ -431,7 +614,7 @@ const styles = StyleSheet.create({
   editarBtnText: {
     color: colors.primary,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
 
   // Cadastro banner
@@ -446,7 +629,7 @@ const styles = StyleSheet.create({
   cadastroBannerTexto: {
     color: colors.warning,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '500' as const,
     lineHeight: 20,
   },
   cadastrarBtn: {
@@ -459,7 +642,7 @@ const styles = StyleSheet.create({
   cadastrarBtnTexto: {
     color: colors.black,
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '700' as const,
   },
 
   // Cards
@@ -473,15 +656,15 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: colors.primary,
     fontSize: 13,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    fontWeight: '700' as const,
+    textTransform: 'uppercase' as const,
     letterSpacing: 1,
     marginBottom: 14,
   },
   sectionLabel: {
     color: colors.textSecondary,
     fontSize: 11,
-    textTransform: 'uppercase',
+    textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
     marginTop: 12,
     marginBottom: 4,
@@ -491,7 +674,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     color: colors.textSecondary,
     fontSize: 12,
-    textTransform: 'uppercase',
+    textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
     marginBottom: 6,
   },
@@ -536,6 +719,145 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
 
+  // Campo valor + botão "A negociar"
+  freteValorHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  freteValorLabel: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+  },
+  aNegociarBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceElevated,
+  },
+  aNegociarBtnAtivo: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryDark,
+  },
+  aNegociarBtnText: {
+    color: colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '700' as const,
+  },
+  aNegociarBtnTextAtivo: {
+    color: colors.white,
+  },
+  freteValorInput: {
+    flexDirection: 'row' as const,
+    alignItems: 'center',
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 12,
+    height: 44,
+    marginBottom: 12,
+  },
+  freteValorInputDisabled: {
+    opacity: 0.5,
+  },
+  freteValorPrefix: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    marginRight: 4,
+  },
+  freteValorText: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 15,
+  },
+
+  // Painel "A negociar"
+  aNegociarPanel: {
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 14,
+    marginBottom: 12,
+    gap: 0,
+  },
+  aNegociarHint: {
+    color: colors.textMuted,
+    fontSize: 13,
+    textAlign: 'center' as const,
+    paddingVertical: 8,
+  },
+  aNegociarSliderCabecalho: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  aNegociarSliderTitulo: {
+    color: colors.textSecondary,
+    fontSize: 11,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+  },
+  aNegociarMargemBadge: {
+    borderRadius: 6,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  aNegociarMargemValor: {
+    fontSize: 14,
+    fontWeight: '800' as const,
+  },
+  aNegociarSlider: {
+    width: '100%',
+    height: 36,
+  },
+  aNegociarSliderLabels: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between',
+    marginTop: -4,
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  aNegociarSliderLabelTexto: {
+    color: colors.textMuted,
+    fontSize: 10,
+  },
+  aNegociarZonaRow: {
+    borderRadius: 7,
+    borderWidth: 1,
+    padding: 8,
+    marginBottom: 10,
+  },
+  aNegociarZonaTexto: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    lineHeight: 16,
+  },
+  aNegociarResultado: {
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 12,
+    alignItems: 'center' as const,
+    gap: 4,
+  },
+  aNegociarResultadoLabel: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    textAlign: 'center' as const,
+  },
+  aNegociarResultadoValor: {
+    fontSize: 22,
+    fontWeight: '800' as const,
+  },
+
   // Tipo retorno
   retornoRow: {
     marginTop: 4,
@@ -543,12 +865,12 @@ const styles = StyleSheet.create({
   retornoLabel: {
     color: colors.textSecondary,
     fontSize: 12,
-    textTransform: 'uppercase',
+    textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
     marginBottom: 8,
   },
   retornoSegment: {
-    flexDirection: 'row',
+    flexDirection: 'row' as const,
     gap: 6,
   },
   retornoOpcao: {
@@ -567,8 +889,8 @@ const styles = StyleSheet.create({
   retornoOpcaoTexto: {
     color: colors.textSecondary,
     fontSize: 11,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: '600' as const,
+    textAlign: 'center' as const,
   },
   retornoOpcaoTextoAtivo: {
     color: colors.white,
@@ -595,7 +917,7 @@ const styles = StyleSheet.create({
   btnCalcularText: {
     color: colors.white,
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '800' as const,
     letterSpacing: 1.2,
   },
 });

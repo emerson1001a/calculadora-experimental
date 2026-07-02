@@ -9,10 +9,57 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
 import { formatCurrency, formatPercent } from '../utils/format';
-import type { ResultadoFrete } from '../types';
+import type { ResultadoFrete, CustoDetalhado } from '../types';
 import { SliderMargem } from '../components/SliderMargem';
 import { GraficoPizza } from '../components/GraficoPizza';
 import { SimularRetornoModal } from '../components/SimularRetornoModal';
+
+function obterConselhos(resultado: ResultadoFrete): string[] {
+  const { lucro, margemReal, custoDetalhado, entrada } = resultado;
+  if (margemReal >= entrada.margemDesejada) return [];
+
+  const d = custoDetalhado as CustoDetalhado;
+  const estadia = d.pernoite + d.alimentacao;
+
+  const custosRevisaveis = [
+    {
+      valor: d.diesel,
+      msg: `O diesel está pesando ${formatCurrency(d.diesel)} nessa viagem. O preço que você usou está atualizado?`,
+    },
+    {
+      valor: d.pedagio,
+      msg: `O pedágio representa ${formatCurrency(d.pedagio)}. Existe rota alternativa?`,
+    },
+    {
+      valor: estadia,
+      msg: `Estadia e alimentação somam ${formatCurrency(estadia)}. Vale negociar o prazo de carregamento.`,
+    },
+    {
+      valor: d.manutencao,
+      msg: `Manutenção está pesando ${formatCurrency(d.manutencao)} na viagem. Última revisão em dia?`,
+    },
+  ]
+    .filter(c => c.valor > 50)
+    .sort((a, b) => b.valor - a.valor);
+
+  const conselhos: string[] = [];
+
+  if (lucro <= 0) {
+    // Prioridade 1: margem negativa — os 2 maiores custos
+    if (custosRevisaveis[0]) conselhos.push(custosRevisaveis[0].msg);
+    if (custosRevisaveis[1]) conselhos.push(custosRevisaveis[1].msg);
+  } else {
+    // Prioridade 2: margem baixa mas positiva
+    if (entrada.tipoRetorno === 'nenhum') {
+      conselhos.push('💡 Veja se tem frete de volta — qualquer valor que você receber é lucro extra.');
+    }
+    if (conselhos.length < 2 && custosRevisaveis[0]) {
+      conselhos.push(custosRevisaveis[0].msg);
+    }
+  }
+
+  return conselhos.slice(0, 2);
+}
 
 interface Props {
   resultado: ResultadoFrete;
@@ -68,6 +115,7 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
   const temRetorno = entrada.tipoRetorno !== 'nenhum';
   const distTotal = entrada.distanciaKm * (temRetorno ? 2 : 1);
   const [modalAberto, setModalAberto] = useState(false);
+  const conselhos = obterConselhos(resultado);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -161,8 +209,22 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
             custoTotal={custoTotal}
             valorFrete={entrada.valorFrete}
             margemInicial={margemReal}
+            pisoANTT={pisoANTT}
+            margemDesejada={entrada.margemDesejada}
           />
         </View>
+
+        {/* CONSELHOS CONTEXTUAIS */}
+        {conselhos.length > 0 && (
+          <View style={[styles.card, styles.cardConselhos]}>
+            <Text style={styles.cardTitle}>O que pode melhorar</Text>
+            {conselhos.map((c, i) => (
+              <View key={i} style={[styles.conselhoItem, i > 0 && styles.conselhoItemBorder]}>
+                <Text style={styles.conselhoTexto}>{c}</Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* PISO ANTT */}
         <View style={[styles.card, abaixoPisoANTT && styles.cardAlerta]}>
@@ -433,6 +495,23 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     marginVertical: 4,
     opacity: 0.4,
+  },
+
+  // Conselhos
+  cardConselhos: {
+    borderColor: colors.warning,
+  },
+  conselhoItem: {
+    paddingVertical: 10,
+  },
+  conselhoItemBorder: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  conselhoTexto: {
+    color: colors.text,
+    fontSize: 13,
+    lineHeight: 19,
   },
 
   // Botões
