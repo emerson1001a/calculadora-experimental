@@ -368,7 +368,7 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
                 activeOpacity={0.8}
               >
                 <Text style={[styles.aNegociarBtnText, aNegociar && styles.aNegociarBtnTextAtivo]}>
-                  {aNegociar ? '✕ A negociar' : 'A negociar'}
+                  {aNegociar ? '✕ A NEGOCIAR' : 'A NEGOCIAR'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -733,11 +733,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   aNegociarBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.primary,
     backgroundColor: colors.surfaceElevated,
   },
   aNegociarBtnAtivo: {
@@ -745,8 +745,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryDark,
   },
   aNegociarBtnText: {
-    color: colors.textSecondary,
-    fontSize: 11,
+    color: colors.primary,
+    fontSize: 13,
     fontWeight: '700' as const,
   },
   aNegociarBtnTextAtivo: {
