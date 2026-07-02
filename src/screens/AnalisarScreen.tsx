@@ -19,7 +19,7 @@ import { calcularFrete } from '../engine/calcularFrete';
 import { colors } from '../theme/colors';
 import { parseNumber, formatCurrency } from '../utils/format';
 import { carregarPerfil } from '../utils/storage';
-import { distancias, cidades } from '../data/distancias';
+import { distancias, cidades, getDistancia } from '../data/distancias';
 import type { ResultadoFrete, TipoRetorno, PerfilCaminhao } from '../types';
 
 type Zona = 'VERDE' | 'AMARELA' | 'VERMELHA';
@@ -89,14 +89,14 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
 
   // Auto-preenche distância quando ambas cidades estão selecionadas
   useEffect(() => {
+    console.log('[distância] useEffect disparou — origem:', origemSelecionada, '| destino:', destinoSelecionado);
     if (!origemSelecionada || !destinoSelecionado) {
       setDistanciaVeioMatriz(false);
       return;
     }
-    const dist =
-      distancias[origemSelecionada]?.[destinoSelecionado] ??
-      distancias[destinoSelecionado]?.[origemSelecionada] ??
-      null;
+    const dist = getDistancia(origemSelecionada, destinoSelecionado);
+    console.log('[distância] getDistancia(', origemSelecionada, ',', destinoSelecionado, ') =', dist);
+    console.log('[distância] chaves no objeto distancias:', Object.keys(distancias).length, '| tem origem?', origemSelecionada in distancias, '| tem destino?', destinoSelecionado in distancias);
     if (dist !== null) {
       setDistancia(String(dist));
       setDistanciaVeioMatriz(true);
@@ -157,11 +157,13 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
     : getZonaNegociar(freteMinimo, margemNegociar, pisoANTTEstimado, margemDesejadaNum);
 
   function selecionarOrigem(cidade: string) {
+    console.log('[selecionarOrigem] cidade selecionada:', cidade);
     setOrigemSelecionada(cidade);
     setBuscaOrigem(cidade);
   }
 
   function selecionarDestino(cidade: string) {
+    console.log('[selecionarDestino] cidade selecionada:', cidade);
     setDestinoSelecionado(cidade);
     setBuscaDestino(cidade);
   }
