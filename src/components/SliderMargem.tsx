@@ -80,7 +80,6 @@ export function SliderMargem({ custoTotal, valorFrete, margemInicial: _margemIni
         style={styles.slider}
         minimumValue={0}
         maximumValue={50}
-        step={1}
         value={margem}
         onValueChange={handleValueChange}
         minimumTrackTintColor={cor}
