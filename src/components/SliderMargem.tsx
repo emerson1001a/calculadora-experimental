@@ -34,8 +34,8 @@ const BG_ZONA: Record<Zona, string> = {
   VERMELHA: colors.dangerBg,
 };
 
-export function SliderMargem({ custoTotal, valorFrete, margemInicial: _margemInicial, pisoANTT, margemDesejada, onSlidingStart, onSlidingComplete }: Props) {
-  const [margem, setMargem] = useState(0);
+export function SliderMargem({ custoTotal, valorFrete, margemInicial, pisoANTT, margemDesejada, onSlidingStart, onSlidingComplete }: Props) {
+  const [margem, setMargem] = useState(Math.min(50, Math.max(0, Math.round(margemInicial))));
   const zonaAnteriorRef = useRef<Zona | null>(null);
 
   const freteNecessario = margem <= 0 ? custoTotal : (margem < 100 ? custoTotal / (1 - margem / 100) : Infinity);
