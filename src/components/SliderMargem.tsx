@@ -1,5 +1,5 @@
-import React, { useRef, useReducer } from 'react';
-import { View, Text, StyleSheet, Vibration } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, Vibration, Platform } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { colors } from '../theme/colors';
 import { formatCurrency } from '../utils/format';
@@ -35,11 +35,8 @@ const BG_ZONA: Record<Zona, string> = {
 };
 
 export function SliderMargem({ custoTotal, valorFrete, margemInicial: _margemInicial, pisoANTT, margemDesejada, onSlidingStart, onSlidingComplete }: Props) {
-  const margemRef = useRef(0);
-  const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
+  const [margem, setMargem] = useState(0);
   const zonaAnteriorRef = useRef<Zona | null>(null);
-
-  const margem = margemRef.current;
 
   const freteNecessario = margem <= 0 ? custoTotal : (margem < 100 ? custoTotal / (1 - margem / 100) : Infinity);
   const lucroAbsoluto = margem <= 0 ? 0 : freteNecessario - custoTotal;
@@ -56,12 +53,12 @@ export function SliderMargem({ custoTotal, valorFrete, margemInicial: _margemIni
     : zona === 'AMARELA' ? '⚠ Abaixo da sua margem desejada, mas ainda legal'
     : `🚨 Abaixo do mínimo legal da ANTT (${formatCurrency(pisoANTT)})`;
 
-  function handleValueChange(v: number) {
+  function handleChange(v: number) {
     const novo = Math.round(v);
-    const novoFrete = novo < 100 ? custoTotal / (1 - novo / 100) : Infinity;
+    const novoFrete = novo <= 0 ? custoTotal : (novo < 100 ? custoTotal / (1 - novo / 100) : Infinity);
     const novaZona = getZona(novoFrete, novo, pisoANTT, margemDesejada, valorFrete);
 
-    if (zonaAnteriorRef.current !== null) {
+    if (Platform.OS !== 'web' && zonaAnteriorRef.current !== null) {
       if (zonaAnteriorRef.current !== 'VERMELHA' && novaZona === 'VERMELHA') {
         Vibration.vibrate(300);
       } else if (zonaAnteriorRef.current === 'VERMELHA' && novaZona !== 'VERMELHA') {
@@ -69,8 +66,7 @@ export function SliderMargem({ custoTotal, valorFrete, margemInicial: _margemIni
       }
     }
     zonaAnteriorRef.current = novaZona;
-    margemRef.current = novo;
-    forceUpdate();
+    setMargem(novo);
   }
 
   return (
@@ -82,17 +78,38 @@ export function SliderMargem({ custoTotal, valorFrete, margemInicial: _margemIni
         </View>
       </View>
 
-      <Slider
-        style={styles.slider}
-        minimumValue={0}
-        maximumValue={50}
-        onValueChange={handleValueChange}
-        onSlidingStart={onSlidingStart}
-        onSlidingComplete={onSlidingComplete}
-        minimumTrackTintColor={cor}
-        maximumTrackTintColor={colors.border}
-        thumbTintColor={cor}
-      />
+      {Platform.OS === 'web' ? (
+        <input
+          type="range"
+          min={0}
+          max={50}
+          step={1}
+          value={margem}
+          onChange={(e: any) => handleChange(Number(e.target.value))}
+          style={{
+            width: '100%',
+            height: 40,
+            cursor: 'pointer',
+            accentColor: cor,
+            marginTop: 4,
+            marginBottom: 0,
+            display: 'block',
+          } as any}
+        />
+      ) : (
+        <Slider
+          style={styles.slider}
+          minimumValue={0}
+          maximumValue={50}
+          value={margem}
+          onValueChange={handleChange}
+          onSlidingStart={onSlidingStart}
+          onSlidingComplete={onSlidingComplete}
+          minimumTrackTintColor={cor}
+          maximumTrackTintColor={colors.border}
+          thumbTintColor={cor}
+        />
+      )}
 
       <View style={styles.sliderLabels}>
         <Text style={styles.sliderLabelTexto}>0%</Text>
