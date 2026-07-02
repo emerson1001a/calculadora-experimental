@@ -28,7 +28,7 @@ const ANTT_PISO_POR_KM = 3.2;
 
 function getZonaNegociar(freteMin: number, margemSlider: number, pisoANTT: number, margemDesejada: number): Zona {
   if (freteMin < pisoANTT) return 'VERMELHA';
-  if (margemSlider < margemDesejada) return 'AMARELA';
+  if (margemSlider <= 0 || margemSlider < margemDesejada) return 'AMARELA';
   return 'VERDE';
 }
 
