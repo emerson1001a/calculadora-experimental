@@ -51,7 +51,7 @@ function obterConselhos(resultado: ResultadoFrete): string[] {
   } else {
     // Prioridade 2: margem baixa mas positiva
     if (entrada.tipoRetorno === 'nenhum') {
-      conselhos.push('💡 Veja se tem frete de volta — qualquer valor que você receber é lucro extra.');
+      conselhos.push('💡 Veja se tem frete de retorno — qualquer valor que você receber é lucro extra.');
     }
     if (conselhos.length < 2 && custosRevisaveis[0]) {
       conselhos.push(custosRevisaveis[0].msg);
@@ -200,7 +200,7 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
             onPress={() => setModalAberto(true)}
             activeOpacity={0.8}
           >
-            <Text style={styles.btnSimularText}>E se eu pegar frete de volta?</Text>
+            <Text style={styles.btnSimularText}>E se eu pegar um frete de retorno para minha cidade?</Text>
           </TouchableOpacity>
         )}
 
