@@ -1,6 +1,18 @@
 export type TipoRetorno = 'nenhum' | 'vazio' | 'comCarga';
 
-export type TipoCarroceria = 'Baú' | 'Graneleiro' | 'Frigorífico' | 'Prancha' | 'Tanque' | 'Outros';
+export type TipoVeiculo =
+  | 'Carreta' | 'Carreta LS' | 'Vanderléia' | 'Carreta 4º eixo'
+  | 'Bitrem 7 eixos' | 'Bitrem 9 eixos' | 'Rodotrem'
+  | 'Truck' | 'BiTruck'
+  | 'Fiorino' | 'VLC' | '3/4' | 'Toco';
+
+export type TipoCarroceria =
+  | 'Graneleiro' | 'Grade baixa' | 'Prancha' | 'Caçamba' | 'Plataforma'
+  | 'Sider' | 'Baú' | 'Baú Frigorífico' | 'Baú Refrigerado'
+  | 'Silo' | 'Cegonheiro' | 'Gaiola' | 'Tanque' | 'Bug Porta Container'
+  | 'Munk' | 'Apenas Cavalo' | 'Cavaqueira' | 'Hoper';
+
+export type SimNao = 'Sim' | 'Não' | 'Ambos';
 
 export interface PerfilCaminhao {
   marca: string;
@@ -11,7 +23,11 @@ export interface PerfilCaminhao {
   depreciacaoPorKm: number;
   manutencaoPorKm: number;
   pneusPorKm: number;
-  tipoCarroceria: TipoCarroceria;
+  tipoCarroceria?: TipoCarroceria;
+  tipoVeiculo?: TipoVeiculo;
+  rastreador?: SimNao;
+  agenciador?: SimNao;
+  numeroEixos?: number;
 }
 
 export interface Custos {

@@ -15,11 +15,33 @@ import { CustoRow } from '../components/CustoRow';
 import { colors } from '../theme/colors';
 import { parseNumber } from '../utils/format';
 import { salvarPerfil, carregarPerfil } from '../utils/storage';
-import type { PerfilCaminhao, TipoCarroceria } from '../types';
+import type { PerfilCaminhao, TipoCarroceria, TipoVeiculo, SimNao } from '../types';
 
-const TIPOS_CARROCERIA: TipoCarroceria[] = [
-  'Baú', 'Graneleiro', 'Frigorífico', 'Prancha', 'Tanque', 'Outros',
+const VEICULOS: { categoria: string; opcoes: TipoVeiculo[] }[] = [
+  {
+    categoria: 'Pesado',
+    opcoes: ['Carreta', 'Carreta LS', 'Vanderléia', 'Carreta 4º eixo', 'Bitrem 7 eixos', 'Bitrem 9 eixos', 'Rodotrem'],
+  },
+  { categoria: 'Médio', opcoes: ['Truck', 'BiTruck'] },
+  { categoria: 'Leve', opcoes: ['Fiorino', 'VLC', '3/4', 'Toco'] },
 ];
+
+const CARROCERIAS: { categoria: string; opcoes: TipoCarroceria[] }[] = [
+  {
+    categoria: 'Abertas',
+    opcoes: ['Graneleiro', 'Grade baixa', 'Prancha', 'Caçamba', 'Plataforma'],
+  },
+  {
+    categoria: 'Fechadas',
+    opcoes: ['Sider', 'Baú', 'Baú Frigorífico', 'Baú Refrigerado'],
+  },
+  {
+    categoria: 'Especiais',
+    opcoes: ['Silo', 'Cegonheiro', 'Gaiola', 'Tanque', 'Bug Porta Container', 'Munk', 'Apenas Cavalo', 'Cavaqueira', 'Hoper'],
+  },
+];
+
+const SIM_NAO: SimNao[] = ['Sim', 'Não', 'Ambos'];
 
 interface Props {
   onVoltar: () => void;
@@ -34,7 +56,11 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
   const [depreciacaoPorKm, setDepreciacaoPorKm] = useState('0.20');
   const [manutencaoPorKm, setManutencaoPorKm] = useState('0.15');
   const [pneusPorKm, setPneusPorKm] = useState('0.10');
-  const [tipoCarroceria, setTipoCarroceria] = useState<TipoCarroceria>('Baú');
+  const [tipoCarroceria, setTipoCarroceria] = useState<TipoCarroceria | undefined>(undefined);
+  const [tipoVeiculo, setTipoVeiculo] = useState<TipoVeiculo | undefined>(undefined);
+  const [rastreador, setRastreador] = useState<SimNao | undefined>(undefined);
+  const [agenciador, setAgenciador] = useState<SimNao | undefined>(undefined);
+  const [numeroEixos, setNumeroEixos] = useState('');
 
   useEffect(() => {
     carregarPerfil().then(p => {
@@ -47,7 +73,11 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
       setDepreciacaoPorKm(String(p.depreciacaoPorKm));
       setManutencaoPorKm(String(p.manutencaoPorKm));
       setPneusPorKm(String(p.pneusPorKm));
-      setTipoCarroceria(p.tipoCarroceria);
+      if (p.tipoCarroceria) setTipoCarroceria(p.tipoCarroceria);
+      if (p.tipoVeiculo) setTipoVeiculo(p.tipoVeiculo);
+      if (p.rastreador) setRastreador(p.rastreador);
+      if (p.agenciador) setAgenciador(p.agenciador);
+      if (p.numeroEixos) setNumeroEixos(String(p.numeroEixos));
     });
   }, []);
 
@@ -66,6 +96,10 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
       manutencaoPorKm: parseNumber(manutencaoPorKm) || 0.15,
       pneusPorKm: parseNumber(pneusPorKm) || 0.10,
       tipoCarroceria,
+      tipoVeiculo,
+      rastreador,
+      agenciador,
+      numeroEixos: numeroEixos ? Math.min(9, Math.max(2, parseInt(numeroEixos, 10))) || undefined : undefined,
     };
     await salvarPerfil(perfil);
     onVoltar();
@@ -114,25 +148,97 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
               placeholder="Ex: 2022"
               keyboardType="numeric"
             />
-            <Text style={styles.sectionLabel}>Tipo de Carroceria</Text>
-            <View style={styles.carroceriaGrid}>
-              {TIPOS_CARROCERIA.map(tipo => (
+            <InputField
+              label="Número de Eixos"
+              value={numeroEixos}
+              onChangeText={v => {
+                const n = v.replace(/\D/g, '');
+                setNumeroEixos(n);
+              }}
+              placeholder="Ex: 5  (entre 2 e 9)"
+              keyboardType="numeric"
+            />
+          </View>
+
+          {/* Tipo de Veículo */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Tipo de Veículo</Text>
+            {VEICULOS.map(({ categoria, opcoes }) => (
+              <React.Fragment key={categoria}>
+                <Text style={styles.grupoLabel}>{categoria}</Text>
+                <View style={styles.chipGrid}>
+                  {opcoes.map(op => (
+                    <TouchableOpacity
+                      key={op}
+                      style={[styles.chip, tipoVeiculo === op && styles.chipAtivo]}
+                      onPress={() => setTipoVeiculo(tipoVeiculo === op ? undefined : op)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.chipTexto, tipoVeiculo === op && styles.chipTextoAtivo]}>
+                        {op}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </React.Fragment>
+            ))}
+          </View>
+
+          {/* Tipo de Carroceria */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Tipo de Carroceria</Text>
+            {CARROCERIAS.map(({ categoria, opcoes }) => (
+              <React.Fragment key={categoria}>
+                <Text style={styles.grupoLabel}>{categoria}</Text>
+                <View style={styles.chipGrid}>
+                  {opcoes.map(op => (
+                    <TouchableOpacity
+                      key={op}
+                      style={[styles.chip, tipoCarroceria === op && styles.chipAtivo]}
+                      onPress={() => setTipoCarroceria(tipoCarroceria === op ? undefined : op)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.chipTexto, tipoCarroceria === op && styles.chipTextoAtivo]}>
+                        {op}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </React.Fragment>
+            ))}
+          </View>
+
+          {/* Rastreador e Agenciador */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Extras</Text>
+
+            <Text style={styles.sectionLabel}>Rastreador</Text>
+            <View style={styles.chipGrid}>
+              {SIM_NAO.map(op => (
                 <TouchableOpacity
-                  key={tipo}
-                  style={[
-                    styles.carroceriaOpcao,
-                    tipoCarroceria === tipo && styles.carroceriaOpcaoAtiva,
-                  ]}
-                  onPress={() => setTipoCarroceria(tipo)}
+                  key={op}
+                  style={[styles.chip, rastreador === op && styles.chipAtivo]}
+                  onPress={() => setRastreador(rastreador === op ? undefined : op)}
                   activeOpacity={0.7}
                 >
-                  <Text
-                    style={[
-                      styles.carroceriaTexto,
-                      tipoCarroceria === tipo && styles.carroceriaTextoAtivo,
-                    ]}
-                  >
-                    {tipo}
+                  <Text style={[styles.chipTexto, rastreador === op && styles.chipTextoAtivo]}>
+                    {op}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={[styles.sectionLabel, { marginTop: 14 }]}>Agenciador</Text>
+            <View style={styles.chipGrid}>
+              {SIM_NAO.map(op => (
+                <TouchableOpacity
+                  key={op}
+                  style={[styles.chip, agenciador === op && styles.chipAtivo]}
+                  onPress={() => setAgenciador(agenciador === op ? undefined : op)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.chipTexto, agenciador === op && styles.chipTextoAtivo]}>
+                    {op}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -256,15 +362,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginTop: 4,
     marginBottom: 10,
   },
-  carroceriaGrid: {
+  grupoLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  chipGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    marginBottom: 4,
   },
-  carroceriaOpcao: {
+  chip: {
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 8,
@@ -272,16 +387,16 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surfaceElevated,
   },
-  carroceriaOpcaoAtiva: {
+  chipAtivo: {
     borderColor: colors.primary,
     backgroundColor: colors.primaryDark,
   },
-  carroceriaTexto: {
+  chipTexto: {
     color: colors.textSecondary,
     fontSize: 13,
     fontWeight: '600',
   },
-  carroceriaTextoAtivo: {
+  chipTextoAtivo: {
     color: colors.white,
   },
   btnSalvar: {
