@@ -136,7 +136,9 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
     if (editadoManualmente) return;
     if (!marcaSelecionada || !buscaModelo || !ano) return;
     const lista = caminhoes[marcaSelecionada] ?? [];
+    console.log('[manu-lista]', lista.length, 'modelos para', marcaSelecionada);
     const item = lista.find(m => m.modelo === buscaModelo);
+    console.log('[manu-item]', item);
     if (!item) return;
     const a = parseInt(ano, 10);
     const anoAtual = new Date().getFullYear();
@@ -149,6 +151,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
     };
     const t = taxas[item.categoria];
     const custo = idade <= 1 ? t[0] : idade <= 5 ? t[1] : idade <= 10 ? t[2] : t[3];
+    console.log('[manu-custo]', custo);
     setManutencaoPorKm(toMaquininha(custo));
   }, [marcaSelecionada, buscaModelo, ano, editadoManualmente]);
 
