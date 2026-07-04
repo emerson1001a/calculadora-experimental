@@ -309,7 +309,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
             <Text style={styles.btnSalvarText}>SALVAR CAMINHÃO</Text>
           </TouchableOpacity>
 
-          {__DEV__ && (
+          {(process.env.EXPO_PUBLIC_SHOW_DEV_TOOLS === 'true') && (
             <TouchableOpacity
               style={styles.btnLimparDev}
               onPress={handleLimparPerfil}
