@@ -16,7 +16,7 @@ const ITENS = [
   { chave: 'arla',         label: 'Arla 32',      cor: '#26C6DA' },
   { chave: 'pedagio',      label: 'Pedágio',      cor: '#4FC3F7' },
   { chave: 'alimentacao',  label: 'Alimentação',  cor: '#81C784' },
-  { chave: 'pernoite',     label: 'Pernoite',     cor: '#CE93D8' },
+  { chave: 'pernoite',     label: 'Gasto extra',  cor: '#CE93D8' },
   { chave: 'manutencao',   label: 'Manutenção',   cor: '#FFD54F' },
   { chave: 'pneus',        label: 'Pneus',        cor: '#EF9A9A' },
   { chave: 'depreciacao',  label: 'Depreciação',  cor: '#90A4AE' },

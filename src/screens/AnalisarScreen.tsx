@@ -519,7 +519,7 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
               />
             )}
 
-            <Text style={styles.sectionLabel}>Estadia e Alimentação</Text>
+            <Text style={styles.sectionLabel}>Gastos e Alimentação</Text>
             <CustoRow
               label="Número de diárias"
               value={numeroDiarias}
@@ -527,7 +527,7 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
               unit="noites"
             />
             <CustoRow
-              label="Hospedagem"
+              label="Gasto extra"
               value={hospedagemPorDiaria}
               onChangeText={v => setHospedagemPorDiaria(aplicarMaquininha(v, hospedagemPorDiaria))}
               unit="R$/diária"

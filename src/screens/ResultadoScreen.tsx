@@ -33,7 +33,7 @@ function obterConselhos(resultado: ResultadoFrete): string[] {
     },
     {
       valor: estadia,
-      msg: `Estadia e alimentação somam ${formatCurrency(estadia)}. Vale negociar o prazo de carregamento.`,
+      msg: `Gasto extra e alimentação somam ${formatCurrency(estadia)}. Vale negociar o prazo de carregamento.`,
     },
     {
       valor: d.manutencao,
@@ -321,7 +321,7 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
             <LinhaDetalhe label="Arla 32" valor={custoDetalhado.arla} />
             <LinhaDetalhe label="Pedágio" valor={custoDetalhado.pedagio} />
             <LinhaDetalhe label="Alimentação" valor={custoDetalhado.alimentacao} />
-            <LinhaDetalhe label="Pernoite" valor={custoDetalhado.pernoite} />
+            <LinhaDetalhe label="Gasto extra" valor={custoDetalhado.pernoite} />
             <LinhaDetalhe label="Manutenção" valor={custoDetalhado.manutencao} />
             <LinhaDetalhe label="Pneus" valor={custoDetalhado.pneus} />
             <LinhaDetalhe label="Depreciação" valor={custoDetalhado.depreciacao} />
