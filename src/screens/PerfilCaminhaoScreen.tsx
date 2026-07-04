@@ -123,8 +123,9 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
     const valor = parseNumber(vCaminhao);
     const a = parseInt(anoFab, 10);
     const km = parseNumber(kmAno);
-    if (valor <= 0 || !a || a < 1950 || a > 2026 || km <= 0) return;
-    const idade = Math.max(0, 2026 - a);
+    const anoAtual = new Date().getFullYear();
+    if (valor <= 0 || !a || a < 1950 || a > anoAtual || km <= 0) return;
+    const idade = Math.max(0, anoAtual - a);
     const taxa = idade <= 1 ? 0.15 : idade <= 5 ? 0.09 : idade <= 10 ? 0.06 : 0.03;
     setDepreciacaoPorKm(toMaquininha((valor * taxa) / km));
     setMostrarHintDepreciacao(true);
@@ -137,8 +138,9 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
     const item = lista.find(m => m.modelo === modeloStr);
     if (!item) return;
     const a = parseInt(anoFab, 10);
-    if (!a || a < 1950 || a > 2026) return;
-    const idade = Math.max(0, 2026 - a);
+    const anoAtual = new Date().getFullYear();
+    if (!a || a < 1950 || a > anoAtual) return;
+    const idade = Math.max(0, anoAtual - a);
     const taxas: Record<typeof item.categoria, [number, number, number, number]> = {
       pesado:      [0.20, 0.35, 0.50, 0.70],
       semipesado:  [0.16, 0.28, 0.40, 0.56],
