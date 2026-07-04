@@ -14,7 +14,7 @@ import { InputField } from '../components/InputField';
 import { CustoRow } from '../components/CustoRow';
 import { colors } from '../theme/colors';
 import { parseNumber, aplicarMaquininha, toMaquininha } from '../utils/format';
-import { salvarPerfil, carregarPerfil } from '../utils/storage';
+import { salvarPerfil, carregarPerfil, limparPerfil } from '../utils/storage';
 import type { PerfilCaminhao, TipoCarroceria, TipoVeiculo, SimNao } from '../types';
 
 const VEICULOS: { categoria: string; opcoes: TipoVeiculo[] }[] = [
@@ -80,6 +80,24 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
       if (p.numeroEixos) setNumeroEixos(String(p.numeroEixos));
     });
   }, []);
+
+  function handleLimparPerfil() {
+    Alert.alert(
+      'Limpar perfil',
+      'Isso vai apagar todos os dados do caminhão. Confirmar?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Apagar',
+          style: 'destructive',
+          onPress: async () => {
+            await limparPerfil();
+            onVoltar();
+          },
+        },
+      ],
+    );
+  }
 
   async function handleSalvar() {
     if (!marca.trim() || !modelo.trim()) {
@@ -291,6 +309,16 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
             <Text style={styles.btnSalvarText}>SALVAR CAMINHÃO</Text>
           </TouchableOpacity>
 
+          {__DEV__ && (
+            <TouchableOpacity
+              style={styles.btnLimparDev}
+              onPress={handleLimparPerfil}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.btnLimparDevText}>🧹 Limpar perfil (apenas dev)</Text>
+            </TouchableOpacity>
+          )}
+
           <View style={{ height: 24 }} />
         </ScrollView>
       </KeyboardAvoidingView>
@@ -416,5 +444,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     letterSpacing: 1.5,
+  },
+  btnLimparDev: {
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginTop: 4,
+  },
+  btnLimparDevText: {
+    color: '#E57373',
+    fontSize: 12,
   },
 });

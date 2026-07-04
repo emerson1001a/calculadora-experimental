@@ -15,3 +15,7 @@ export async function carregarPerfil(): Promise<PerfilCaminhao | null> {
     return null;
   }
 }
+
+export async function limparPerfil(): Promise<void> {
+  await AsyncStorage.removeItem(KEY_PERFIL);
+}
