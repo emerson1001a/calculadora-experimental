@@ -152,6 +152,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
     const t = taxas[item.categoria];
     const custo = idade <= 1 ? t[0] : idade <= 5 ? t[1] : idade <= 10 ? t[2] : t[3];
     console.log('[manu-custo]', custo);
+    console.log('[manu-set]', toMaquininha(custo), '| estado atual:', manutencaoPorKm);
     setManutencaoPorKm(toMaquininha(custo));
   }, [marcaSelecionada, buscaModelo, ano, editadoManualmente]);
 
