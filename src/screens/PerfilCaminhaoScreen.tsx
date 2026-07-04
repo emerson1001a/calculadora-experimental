@@ -168,6 +168,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
       setArlaKmPorLt('0');
       setArlaDesabilitada(true);
     }
+    manutencaoManualRef.current = false;
     calcularManutencaoAuto(item.categoria, ano, true);
   }
 
