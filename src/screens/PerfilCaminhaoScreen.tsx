@@ -132,6 +132,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
   }
 
   useEffect(() => {
+    console.log('[manu-effect]', { editadoManualmente, marcaSelecionada, buscaModelo, ano });
     if (editadoManualmente) return;
     if (!marcaSelecionada || !buscaModelo || !ano) return;
     const lista = caminhoes[marcaSelecionada] ?? [];
