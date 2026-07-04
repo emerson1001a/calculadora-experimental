@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, Vibration, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { colors } from '../theme/colors';
 import { formatCurrency } from '../utils/format';
@@ -16,9 +16,9 @@ interface Props {
   onSlidingComplete?: () => void;
 }
 
-function getZona(freteNecessario: number, margem: number, pisoANTT: number, margemDesejada: number, valorFrete: number): Zona {
-  if (valorFrete < pisoANTT || freteNecessario < pisoANTT) return 'VERMELHA';
-  if (margem <= 0 || margem < margemDesejada) return 'AMARELA';
+function getZona(valorFrete: number, sliderMargem: number, pisoANTT: number, margemDesejada: number): Zona {
+  if (valorFrete < pisoANTT) return 'VERMELHA';
+  if (sliderMargem < margemDesejada) return 'AMARELA';
   return 'VERDE';
 }
 
@@ -35,8 +35,7 @@ const BG_ZONA: Record<Zona, string> = {
 };
 
 export function SliderMargem({ custoTotal, valorFrete, margemInicial, pisoANTT, margemDesejada, onSlidingStart, onSlidingComplete }: Props) {
-  const [margem, setMargem] = useState(Math.min(50, Math.max(0, Math.round(margemInicial))));
-  const zonaAnteriorRef = useRef<Zona | null>(null);
+  const [margem, setMargem] = useState(Math.min(100, Math.max(0, Math.round(margemDesejada))));
 
   const freteNecessario = margem <= 0 ? custoTotal : (margem < 100 ? custoTotal / (1 - margem / 100) : Infinity);
   const lucroAbsoluto = margem <= 0 ? 0 : freteNecessario - custoTotal;
@@ -44,7 +43,7 @@ export function SliderMargem({ custoTotal, valorFrete, margemInicial, pisoANTT, 
   const diferencaPositiva = diferenca > 0.005;
   const diferencaNegativa = diferenca < -0.005;
 
-  const zona = getZona(freteNecessario, margem, pisoANTT, margemDesejada, valorFrete);
+  const zona = getZona(valorFrete, margem, pisoANTT, margemDesejada);
   const cor = COR_ZONA[zona];
   const bg = BG_ZONA[zona];
 
@@ -54,19 +53,7 @@ export function SliderMargem({ custoTotal, valorFrete, margemInicial, pisoANTT, 
     : `🚨 Abaixo do mínimo legal da ANTT (${formatCurrency(pisoANTT)})`;
 
   function handleChange(v: number) {
-    const novo = Math.round(v);
-    const novoFrete = novo <= 0 ? custoTotal : (novo < 100 ? custoTotal / (1 - novo / 100) : Infinity);
-    const novaZona = getZona(novoFrete, novo, pisoANTT, margemDesejada, valorFrete);
-
-    if (Platform.OS !== 'web' && zonaAnteriorRef.current !== null) {
-      if (zonaAnteriorRef.current !== 'VERMELHA' && novaZona === 'VERMELHA') {
-        Vibration.vibrate(300);
-      } else if (zonaAnteriorRef.current === 'VERMELHA' && novaZona !== 'VERMELHA') {
-        Vibration.vibrate(100);
-      }
-    }
-    zonaAnteriorRef.current = novaZona;
-    setMargem(novo);
+    setMargem(Math.round(v));
   }
 
   return (
@@ -82,7 +69,7 @@ export function SliderMargem({ custoTotal, valorFrete, margemInicial, pisoANTT, 
         <input
           type="range"
           min={0}
-          max={50}
+          max={100}
           step={1}
           value={margem}
           onChange={(e: any) => handleChange(Number(e.target.value))}
@@ -100,7 +87,7 @@ export function SliderMargem({ custoTotal, valorFrete, margemInicial, pisoANTT, 
         <Slider
           style={styles.slider}
           minimumValue={0}
-          maximumValue={50}
+          maximumValue={100}
           value={margem}
           onValueChange={handleChange}
           onSlidingStart={onSlidingStart}
@@ -113,7 +100,7 @@ export function SliderMargem({ custoTotal, valorFrete, margemInicial, pisoANTT, 
 
       <View style={styles.sliderLabels}>
         <Text style={styles.sliderLabelTexto}>0%</Text>
-        <Text style={styles.sliderLabelTexto}>50%</Text>
+        <Text style={styles.sliderLabelTexto}>100%</Text>
       </View>
 
       <View style={[styles.zonaRow, { backgroundColor: bg, borderColor: cor }]}>

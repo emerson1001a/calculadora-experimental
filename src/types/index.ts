@@ -52,6 +52,7 @@ export interface EntradaFrete {
   tipoRetorno: TipoRetorno;
   margemDesejada: number;
   custos: Custos;
+  distanciaEstimada?: boolean;
 }
 
 export interface CustoDetalhado {

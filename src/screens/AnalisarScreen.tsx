@@ -89,14 +89,11 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
 
   // Auto-preenche distância quando ambas cidades estão selecionadas
   useEffect(() => {
-    console.log('[distância] useEffect disparou — origem:', origemSelecionada, '| destino:', destinoSelecionado);
     if (!origemSelecionada || !destinoSelecionado) {
       setDistanciaVeioMatriz(false);
       return;
     }
     const dist = getDistancia(origemSelecionada, destinoSelecionado);
-    console.log('[distância] getDistancia(', origemSelecionada, ',', destinoSelecionado, ') =', dist);
-    console.log('[distância] chaves no objeto distancias:', Object.keys(distancias).length, '| tem origem?', origemSelecionada in distancias, '| tem destino?', destinoSelecionado in distancias);
     if (dist !== null) {
       setDistancia(String(dist));
       setDistanciaVeioMatriz(true);
@@ -104,6 +101,19 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
       setDistanciaVeioMatriz(false);
     }
   }, [origemSelecionada, destinoSelecionado]);
+
+  // Auto-preenche número de diárias com base na distância
+  useEffect(() => {
+    const dist = parseNumber(distancia);
+    if (dist <= 0) return;
+    let dias: number;
+    if (dist <= 600) dias = 1;
+    else if (dist <= 1200) dias = 2;
+    else if (dist <= 2000) dias = 3;
+    else if (dist <= 3000) dias = 4;
+    else dias = 5;
+    setNumeroDiarias(String(dias));
+  }, [distancia]);
 
   const sugestoesOrigem = useMemo(() => {
     if (buscaOrigem.length < 2 || origemSelecionada) return [];
@@ -234,6 +244,7 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
       valorFrete: valor,
       tipoRetorno,
       margemDesejada: margemUsada,
+      distanciaEstimada: distanciaVeioMatriz,
       custos: {
         dieselKmPorLt: perfil.dieselKmPorLt,
         dieselPrecoPorLitro: parseNumber(precoDiesel),
@@ -355,11 +366,10 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
               <InputField
                 label="Distância"
                 value={distancia}
-                onChangeText={setDistancia}
-                placeholder={distanciaVeioMatriz ? '' : 'Digite a distância em km'}
+                onChangeText={v => { setDistancia(v); setDistanciaVeioMatriz(false); }}
+                placeholder="Digite a distância em km"
                 keyboardType="numeric"
                 suffix="km"
-                editable={!distanciaVeioMatriz}
               />
               {distanciaVeioMatriz && (
                 <Text style={styles.distHint}>✓ preenchida automaticamente</Text>

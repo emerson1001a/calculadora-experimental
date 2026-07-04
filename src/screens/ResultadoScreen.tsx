@@ -138,6 +138,15 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} scrollEnabled={scrollEnabled}>
 
+        {/* OFFLINE BANNER */}
+        {entrada.distanciaEstimada && (
+          <View style={styles.offlineBanner}>
+            <Text style={styles.offlineBannerTexto}>
+              📍 Distância estimada — edite se souber o valor exato
+            </Text>
+          </View>
+        )}
+
         {/* VEREDITO */}
         <View style={[styles.veredito, { backgroundColor: cfg.bg, borderColor: cfg.color }]}>
           <Text style={[styles.vereditoEmoji, { color: cfg.color }]}>{cfg.emoji}</Text>
@@ -250,6 +259,11 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
                 ⚠ Frete {formatCurrency(pisoANTT - entrada.valorFrete)} abaixo do piso mínimo ANTT
               </Text>
             </View>
+          )}
+          {pisoANTT > 0 && (
+            <Text style={styles.anttDisclaimer}>
+              Estimativa com base em modelo de custo transparente. O piso ANTT é referência regulatória e o veredito não é aconselhamento.
+            </Text>
           )}
         </View>
 
@@ -515,6 +529,29 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 13,
     lineHeight: 19,
+  },
+
+  // Offline banner
+  offlineBanner: {
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  offlineBannerTexto: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+
+  // ANTT disclaimer
+  anttDisclaimer: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 10,
   },
 
   // Botões
