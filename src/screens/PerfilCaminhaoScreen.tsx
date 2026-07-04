@@ -82,12 +82,12 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
       setBuscaMarca(p.marca);
       setMarcaSelecionada(p.marca);
       setBuscaModelo(p.modelo);
+      setModeloSelecionado(true);
       setAno(p.ano);
       setDieselKmPorLt(String(p.dieselKmPorLt));
       setArlaKmPorLt(String(p.arlaKmPorLt));
       setDepreciacaoPorKm(toMaquininha(p.depreciacaoPorKm));
       setManutencaoPorKm(toMaquininha(p.manutencaoPorKm));
-      setEditadoManualmente(true);
       setPneusPorKm(toMaquininha(p.pneusPorKm));
       if (p.tipoCarroceria) setTipoCarroceria(p.tipoCarroceria);
       if (p.tipoVeiculo) setTipoVeiculo(p.tipoVeiculo);
