@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { InputField } from '../components/InputField';
 import { CustoRow } from '../components/CustoRow';
 import { calcularFrete } from '../engine/calcularFrete';
@@ -78,6 +79,15 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
   const [precoDiesel, setPrecoDiesel] = useState('6,50');
   const [precoArla, setPrecoArla] = useState('4,50');
 
+  // Campos adaptativos (aparecem quando ausentes do perfil)
+  const [consumoDiesel, setConsumoDiesel] = useState('');
+  const [consumoArla, setConsumoArla] = useState('');
+  const [eixosManual, setEixosManual] = useState('');
+
+  // Coach marks
+  const [coachConsumoVisivel, setCoachConsumoVisivel] = useState(false);
+  const [coachEixosVisivel, setCoachEixosVisivel] = useState(false);
+
   useEffect(() => {
     carregarPerfil().then(p => {
       setPerfil(p);
@@ -113,6 +123,49 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
     setNumeroDiarias(String(dias));
   }, [distancia]);
 
+  // Coach marks: exibe uma vez após 1s, some após 5s ou ao tocar
+  useEffect(() => {
+    if (!perfilCarregado) return;
+    const needsConsumo = !perfil || !(perfil.dieselKmPorLt > 0 && perfil.arlaKmPorLt > 0);
+    const needsEixos = !perfil || !(perfil.numeroEixos && perfil.numeroEixos > 0);
+    if (!needsConsumo && !needsEixos) return;
+
+    let t1: ReturnType<typeof setTimeout>;
+    let t2: ReturnType<typeof setTimeout>;
+    let t3: ReturnType<typeof setTimeout>;
+    let t4: ReturnType<typeof setTimeout>;
+
+    AsyncStorage.multiGet(['coach_consumo_exibido', 'coach_eixos_exibido']).then(results => {
+      const consumoVisto = results[0][1] === 'true';
+      const eixosVisto = results[1][1] === 'true';
+      if (needsConsumo && !consumoVisto) {
+        t1 = setTimeout(() => {
+          setCoachConsumoVisivel(true);
+          t2 = setTimeout(() => {
+            setCoachConsumoVisivel(false);
+            AsyncStorage.setItem('coach_consumo_exibido', 'true');
+          }, 5000);
+        }, 1000);
+      }
+      if (needsEixos && !eixosVisto) {
+        t3 = setTimeout(() => {
+          setCoachEixosVisivel(true);
+          t4 = setTimeout(() => {
+            setCoachEixosVisivel(false);
+            AsyncStorage.setItem('coach_eixos_exibido', 'true');
+          }, 5000);
+        }, 1000);
+      }
+    });
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+    };
+  }, [perfilCarregado, perfil]);
+
   const sugestoesOrigem = useMemo(() => {
     if (buscaOrigem.length < 2 || origemSelecionada) return [];
     const q = buscaOrigem.toLowerCase();
@@ -126,21 +179,25 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
   }, [buscaDestino, destinoSelecionado]);
 
   // Cálculo em tempo real para modo "A negociar"
-  const pisoANTTEstimado = useMemo(
-    () => calcularPisoANTT(parseNumber(distancia), perfil?.numeroEixos),
-    [distancia, perfil],
-  );
+  const pisoANTTEstimado = useMemo(() => {
+    const eixos = (perfil?.numeroEixos && perfil.numeroEixos > 0)
+      ? perfil.numeroEixos
+      : (parseNumber(eixosManual) || undefined);
+    return calcularPisoANTT(parseNumber(distancia), eixos);
+  }, [distancia, perfil, eixosManual]);
 
   const custoEstimado = useMemo<number | null>(() => {
-    if (!perfil) return null;
     const dist = parseNumber(distancia);
     if (dist <= 0) return null;
+    const dKm = (perfil && perfil.dieselKmPorLt > 0) ? perfil.dieselKmPorLt : parseNumber(consumoDiesel);
+    const aKm = (perfil && perfil.arlaKmPorLt > 0) ? perfil.arlaKmPorLt : parseNumber(consumoArla);
+    if (dKm <= 0 || aKm <= 0) return null;
     const temRetorno = tipoRetorno !== 'nenhum';
     const fatorKm = temRetorno ? 2 : 1;
     const distTotal = dist * fatorKm;
     const nDiarias = parseNumber(numeroDiarias);
-    const diesel = (parseNumber(precoDiesel) / perfil.dieselKmPorLt) * distTotal;
-    const arla = (parseNumber(precoArla) / perfil.arlaKmPorLt) * distTotal;
+    const diesel = (parseNumber(precoDiesel) / dKm) * distTotal;
+    const arla = (parseNumber(precoArla) / aKm) * distTotal;
     const pedagioTotal = !temRetorno
       ? parseNumber(pedagio)
       : tipoRetorno === 'vazio'
@@ -150,11 +207,11 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
       diesel + arla + pedagioTotal
       + nDiarias * parseNumber(alimentacaoPorDia)
       + nDiarias * parseNumber(hospedagemPorDiaria)
-      + perfil.manutencaoPorKm * distTotal
-      + perfil.pneusPorKm * distTotal
-      + perfil.depreciacaoPorKm * distTotal
+      + (perfil?.manutencaoPorKm ?? 0) * distTotal
+      + (perfil?.pneusPorKm ?? 0) * distTotal
+      + (perfil?.depreciacaoPorKm ?? 0) * distTotal
     );
-  }, [perfil, distancia, tipoRetorno, precoDiesel, precoArla, pedagio, pedagioVolta, numeroDiarias, alimentacaoPorDia, hospedagemPorDiaria]);
+  }, [perfil, distancia, tipoRetorno, precoDiesel, precoArla, pedagio, pedagioVolta, numeroDiarias, alimentacaoPorDia, hospedagemPorDiaria, consumoDiesel, consumoArla]);
 
   const freteMinimo = useMemo<number | null>(() => {
     if (custoEstimado === null || margemNegociar >= 100) return null;
@@ -162,6 +219,12 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
   }, [custoEstimado, margemNegociar]);
 
   const margemDesejadaNum = 0;
+
+  // Flags: campos que precisam aparecer na tela (ausentes do perfil)
+  const mostrarDieselKm = perfilCarregado && (!perfil || !(perfil.dieselKmPorLt > 0));
+  const mostrarArlaKm = perfilCarregado && (!perfil || !(perfil.arlaKmPorLt > 0));
+  const mostrarEixos = perfilCarregado && (!perfil || !(perfil.numeroEixos && perfil.numeroEixos > 0));
+  const mostrarCamposAdaptativos = mostrarDieselKm || mostrarArlaKm || mostrarEixos;
 
   const zonaNegociar: Zona = freteMinimo === null || !isFinite(freteMinimo)
     ? 'VERDE'
@@ -177,6 +240,16 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
     console.log('[selecionarDestino] cidade selecionada:', cidade);
     setDestinoSelecionado(cidade);
     setBuscaDestino(cidade);
+  }
+
+  function dismissCoachConsumo() {
+    setCoachConsumoVisivel(false);
+    AsyncStorage.setItem('coach_consumo_exibido', 'true');
+  }
+
+  function dismissCoachEixos() {
+    setCoachEixosVisivel(false);
+    AsyncStorage.setItem('coach_eixos_exibido', 'true');
   }
 
   function toggleANegociar() {
@@ -204,8 +277,12 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
   }
 
   function handleCalcular() {
-    if (!perfil) {
-      Alert.alert('Perfil não cadastrado', 'Cadastre seu caminhão antes de calcular.');
+    if (mostrarDieselKm && parseNumber(consumoDiesel) <= 0) {
+      Alert.alert('Dado obrigatório', 'Informe o consumo de diesel (km/L).');
+      return;
+    }
+    if (mostrarArlaKm && parseNumber(consumoArla) <= 0) {
+      Alert.alert('Dado obrigatório', 'Informe o consumo de Arla 32 (km/L).');
       return;
     }
 
@@ -235,6 +312,11 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
     }
 
     const nDiarias = parseNumber(numeroDiarias);
+    const dKm = (perfil && perfil.dieselKmPorLt > 0) ? perfil.dieselKmPorLt : parseNumber(consumoDiesel);
+    const aKm = (perfil && perfil.arlaKmPorLt > 0) ? perfil.arlaKmPorLt : parseNumber(consumoArla);
+    const eixos = (perfil?.numeroEixos && perfil.numeroEixos > 0)
+      ? perfil.numeroEixos
+      : (parseNumber(eixosManual) || undefined);
 
     const resultado = calcularFrete({
       origem: origemSelecionada || buscaOrigem.trim() || 'Origem',
@@ -244,19 +326,19 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
       tipoRetorno,
       margemDesejada: margemUsada,
       distanciaEstimada: distanciaVeioMatriz,
-      numeroEixos: perfil?.numeroEixos,
+      numeroEixos: eixos,
       custos: {
-        dieselKmPorLt: perfil.dieselKmPorLt,
+        dieselKmPorLt: dKm,
         dieselPrecoPorLitro: parseNumber(precoDiesel),
-        arlaKmPorLt: perfil.arlaKmPorLt,
+        arlaKmPorLt: aKm,
         arlaPrecoPorLitro: parseNumber(precoArla),
         pedagio: parseNumber(pedagio),
         pedagioVolta: parseNumber(pedagioVolta),
         alimentacao: nDiarias * parseNumber(alimentacaoPorDia),
         pernoite: nDiarias * parseNumber(hospedagemPorDiaria),
-        manutencaoPorKm: perfil.manutencaoPorKm,
-        pneusPorKm: perfil.pneusPorKm,
-        depreciacaoPorKm: perfil.depreciacaoPorKm,
+        manutencaoPorKm: perfil?.manutencaoPorKm ?? 0,
+        pneusPorKm: perfil?.pneusPorKm ?? 0,
+        depreciacaoPorKm: perfil?.depreciacaoPorKm ?? 0,
       },
     });
 
@@ -310,6 +392,69 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
                 </TouchableOpacity>
               </View>
             )
+          )}
+
+          {/* CAMPOS ADAPTATIVOS — aparecem quando ausentes do perfil */}
+          {mostrarCamposAdaptativos && (
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Dados do Caminhão</Text>
+
+              {(mostrarDieselKm || mostrarArlaKm) && (
+                <>
+                  <Text style={styles.sectionLabel}>Consumo</Text>
+                  {mostrarDieselKm && (
+                    <CustoRow
+                      label="Diesel"
+                      value={consumoDiesel}
+                      onChangeText={setConsumoDiesel}
+                      unit="km/L"
+                    />
+                  )}
+                  {mostrarArlaKm && (
+                    <CustoRow
+                      label="Arla 32"
+                      value={consumoArla}
+                      onChangeText={setConsumoArla}
+                      unit="km/L"
+                    />
+                  )}
+                  {coachConsumoVisivel && (
+                    <TouchableOpacity onPress={dismissCoachConsumo} activeOpacity={1}>
+                      <View style={styles.coachArrow} />
+                      <View style={styles.coachBubble}>
+                        <Text style={styles.coachText}>
+                          💡 Preencha os dados do seu caminhão uma vez e nunca mais precisará digitar isso aqui
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                </>
+              )}
+
+              {mostrarEixos && (
+                <>
+                  <Text style={[styles.sectionLabel, (mostrarDieselKm || mostrarArlaKm) ? { marginTop: 14 } : undefined]}>
+                    Eixos
+                  </Text>
+                  <CustoRow
+                    label="Número de eixos"
+                    value={eixosManual}
+                    onChangeText={setEixosManual}
+                    unit="eixos"
+                  />
+                  {coachEixosVisivel && (
+                    <TouchableOpacity onPress={dismissCoachEixos} activeOpacity={1}>
+                      <View style={styles.coachArrow} />
+                      <View style={styles.coachBubble}>
+                        <Text style={styles.coachText}>
+                          💡 Com o número de eixos calculamos o piso mínimo da ANTT corretamente para o seu caminhão
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                </>
+              )}
+            </View>
           )}
 
           {/* ROTA */}
@@ -547,14 +692,11 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
           </View>
 
           <TouchableOpacity
-            style={[styles.btnCalcular, !perfil && styles.btnCalcularBloqueado]}
+            style={styles.btnCalcular}
             onPress={handleCalcular}
-            disabled={!perfil && perfilCarregado}
             activeOpacity={0.85}
           >
-            <Text style={styles.btnCalcularText}>
-              {!perfil && perfilCarregado ? 'CADASTRE SEU CAMINHÃO PRIMEIRO' : 'CALCULAR FRETE'}
-            </Text>
+            <Text style={styles.btnCalcularText}>CALCULAR FRETE</Text>
           </TouchableOpacity>
 
           <View style={{ height: 24 }} />
@@ -924,15 +1066,35 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
-  btnCalcularBloqueado: {
-    backgroundColor: colors.surfaceElevated,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
   btnCalcularText: {
     color: colors.white,
     fontSize: 15,
     fontWeight: '800' as const,
     letterSpacing: 1.2,
+  },
+
+  // Coach marks
+  coachArrow: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderBottomWidth: 10,
+    borderLeftColor: 'transparent' as const,
+    borderRightColor: 'transparent' as const,
+    borderBottomColor: 'rgba(20,20,20,0.92)' as const,
+    marginLeft: 18,
+    marginTop: 8,
+  },
+  coachBubble: {
+    backgroundColor: 'rgba(20,20,20,0.92)' as const,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 4,
+  },
+  coachText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    lineHeight: 18,
   },
 });
