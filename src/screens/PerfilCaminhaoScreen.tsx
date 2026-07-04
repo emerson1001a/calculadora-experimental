@@ -63,7 +63,10 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
   const [ano, setAno] = useState('');
   const [dieselKmPorLt, setDieselKmPorLt] = useState('3.5');
   const [arlaKmPorLt, setArlaKmPorLt] = useState('70');
+  const [valorCaminhao, setValorCaminhao] = useState('');
+  const [kmPorAno, setKmPorAno] = useState('120000');
   const [depreciacaoPorKm, setDepreciacaoPorKm] = useState('0,20');
+  const [mostrarHintDepreciacao, setMostrarHintDepreciacao] = useState(false);
   const [manutencaoPorKm, setManutencaoPorKm] = useState('0,15');
   const [pneusPorKm, setPneusPorKm] = useState('0,10');
   const [tipoCarroceria, setTipoCarroceria] = useState<TipoCarroceria | undefined>(undefined);
@@ -89,6 +92,8 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
       if (p.rastreador) setRastreador(p.rastreador);
       if (p.agenciador) setAgenciador(p.agenciador);
       if (p.numeroEixos) setNumeroEixos(String(p.numeroEixos));
+      if (p.valorCaminhao) setValorCaminhao(toMaquininha(p.valorCaminhao));
+      if (p.kmPorAno) setKmPorAno(String(p.kmPorAno));
     });
   }, []);
 
@@ -111,6 +116,17 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
     if (lista.length === 0) return 'Digite o modelo';
     return lista.slice(0, 3).map(m => m.modelo).join(', ') + '...';
   }, [marcaSelecionada]);
+
+  function calcularDepreciacaoAuto(vCaminhao: string, anoFab: string, kmAno: string) {
+    const valor = parseNumber(vCaminhao);
+    const a = parseInt(anoFab, 10);
+    const km = parseNumber(kmAno);
+    if (valor <= 0 || !a || a < 1950 || a > 2026 || km <= 0) return;
+    const idade = Math.max(0, 2026 - a);
+    const taxa = idade <= 1 ? 0.15 : idade <= 5 ? 0.09 : idade <= 10 ? 0.06 : 0.03;
+    setDepreciacaoPorKm(toMaquininha((valor * taxa) / km));
+    setMostrarHintDepreciacao(true);
+  }
 
   function selecionarMarca(m: string) {
     setBuscaMarca(m);
@@ -181,6 +197,8 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
       rastreador,
       agenciador,
       numeroEixos: numeroEixos ? Math.min(9, Math.max(2, parseInt(numeroEixos, 10))) || undefined : undefined,
+      valorCaminhao: parseNumber(valorCaminhao) || undefined,
+      kmPorAno: parseNumber(kmPorAno) || undefined,
     };
     await salvarPerfil(perfil);
     onVoltar();
@@ -259,9 +277,12 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
             )}
 
             <InputField
-              label="Ano"
+              label="Ano de Fabricação"
               value={ano}
-              onChangeText={setAno}
+              onChangeText={v => {
+                setAno(v);
+                calcularDepreciacaoAuto(valorCaminhao, v, kmPorAno);
+              }}
               placeholder="Ex: 2022"
               keyboardType="numeric"
             />
@@ -390,12 +411,46 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Custo por Quilômetro</Text>
             <Text style={styles.cardHint}>Valores médios do seu caminhão rodado</Text>
+
+            <Text style={styles.sectionLabel}>Cálculo de depreciação</Text>
+            <InputField
+              label="Valor do caminhão (R$)"
+              value={valorCaminhao}
+              onChangeText={v => {
+                const novo = aplicarMaquininha(v, valorCaminhao);
+                setValorCaminhao(novo);
+                calcularDepreciacaoAuto(novo, ano, kmPorAno);
+              }}
+              placeholder="0,00"
+              keyboardType="decimal-pad"
+            />
+            <InputField
+              label="Km rodados por ano"
+              value={kmPorAno}
+              onChangeText={v => {
+                const digits = v.replace(/\D/g, '');
+                setKmPorAno(digits);
+                calcularDepreciacaoAuto(valorCaminhao, ano, digits);
+              }}
+              placeholder="120000"
+              keyboardType="numeric"
+            />
+
+            <Text style={[styles.sectionLabel, { marginTop: 14 }]}>Custos</Text>
             <CustoRow
               label="Depreciação"
               value={depreciacaoPorKm}
-              onChangeText={v => setDepreciacaoPorKm(aplicarMaquininha(v, depreciacaoPorKm))}
+              onChangeText={v => {
+                setMostrarHintDepreciacao(false);
+                setDepreciacaoPorKm(aplicarMaquininha(v, depreciacaoPorKm));
+              }}
               unit="R$/km"
             />
+            {mostrarHintDepreciacao && (
+              <Text style={styles.consumoHint}>
+                Calculado automaticamente — edite se preferir
+              </Text>
+            )}
             <CustoRow
               label="Manutenção"
               value={manutencaoPorKm}

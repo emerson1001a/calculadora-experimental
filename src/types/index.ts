@@ -28,6 +28,8 @@ export interface PerfilCaminhao {
   rastreador?: SimNao;
   agenciador?: SimNao;
   numeroEixos?: number;
+  valorCaminhao?: number;
+  kmPorAno?: number;
 }
 
 export interface Custos {
