@@ -82,21 +82,21 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
   }, []);
 
   function handleLimparPerfil() {
-    Alert.alert(
-      'Limpar perfil',
-      'Isso vai apagar todos os dados do caminhão. Confirmar?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Apagar',
-          style: 'destructive',
-          onPress: async () => {
-            await limparPerfil();
-            onVoltar();
-          },
-        },
-      ],
-    );
+    if (Platform.OS === 'web') {
+      // Alert.alert usa window.confirm internamente no web e pode ser suprimido pelo browser
+      // eslint-disable-next-line no-alert
+      if (!window.confirm('Isso vai apagar todos os dados do caminhão. Confirmar?')) return;
+      limparPerfil().then(() => onVoltar());
+    } else {
+      Alert.alert(
+        'Limpar perfil',
+        'Isso vai apagar todos os dados do caminhão. Confirmar?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Apagar', style: 'destructive', onPress: () => limparPerfil().then(() => onVoltar()) },
+        ],
+      );
+    }
   }
 
   async function handleSalvar() {
