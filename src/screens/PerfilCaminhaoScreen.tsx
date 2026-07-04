@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { InputField } from '../components/InputField';
 import { CustoRow } from '../components/CustoRow';
 import { colors } from '../theme/colors';
-import { parseNumber } from '../utils/format';
+import { parseNumber, aplicarMaquininha, toMaquininha } from '../utils/format';
 import { salvarPerfil, carregarPerfil } from '../utils/storage';
 import type { PerfilCaminhao, TipoCarroceria, TipoVeiculo, SimNao } from '../types';
 
@@ -53,9 +53,9 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
   const [ano, setAno] = useState('');
   const [dieselKmPorLt, setDieselKmPorLt] = useState('3.5');
   const [arlaKmPorLt, setArlaKmPorLt] = useState('70');
-  const [depreciacaoPorKm, setDepreciacaoPorKm] = useState('0.20');
-  const [manutencaoPorKm, setManutencaoPorKm] = useState('0.15');
-  const [pneusPorKm, setPneusPorKm] = useState('0.10');
+  const [depreciacaoPorKm, setDepreciacaoPorKm] = useState('0,20');
+  const [manutencaoPorKm, setManutencaoPorKm] = useState('0,15');
+  const [pneusPorKm, setPneusPorKm] = useState('0,10');
   const [tipoCarroceria, setTipoCarroceria] = useState<TipoCarroceria | undefined>(undefined);
   const [tipoVeiculo, setTipoVeiculo] = useState<TipoVeiculo | undefined>(undefined);
   const [rastreador, setRastreador] = useState<SimNao | undefined>(undefined);
@@ -70,9 +70,9 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
       setAno(p.ano);
       setDieselKmPorLt(String(p.dieselKmPorLt));
       setArlaKmPorLt(String(p.arlaKmPorLt));
-      setDepreciacaoPorKm(String(p.depreciacaoPorKm));
-      setManutencaoPorKm(String(p.manutencaoPorKm));
-      setPneusPorKm(String(p.pneusPorKm));
+      setDepreciacaoPorKm(toMaquininha(p.depreciacaoPorKm));
+      setManutencaoPorKm(toMaquininha(p.manutencaoPorKm));
+      setPneusPorKm(toMaquininha(p.pneusPorKm));
       if (p.tipoCarroceria) setTipoCarroceria(p.tipoCarroceria);
       if (p.tipoVeiculo) setTipoVeiculo(p.tipoVeiculo);
       if (p.rastreador) setRastreador(p.rastreador);
@@ -270,19 +270,19 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
             <CustoRow
               label="Depreciação"
               value={depreciacaoPorKm}
-              onChangeText={setDepreciacaoPorKm}
+              onChangeText={v => setDepreciacaoPorKm(aplicarMaquininha(v, depreciacaoPorKm))}
               unit="R$/km"
             />
             <CustoRow
               label="Manutenção"
               value={manutencaoPorKm}
-              onChangeText={setManutencaoPorKm}
+              onChangeText={v => setManutencaoPorKm(aplicarMaquininha(v, manutencaoPorKm))}
               unit="R$/km"
             />
             <CustoRow
               label="Pneus"
               value={pneusPorKm}
-              onChangeText={setPneusPorKm}
+              onChangeText={v => setPneusPorKm(aplicarMaquininha(v, pneusPorKm))}
               unit="R$/km"
             />
           </View>

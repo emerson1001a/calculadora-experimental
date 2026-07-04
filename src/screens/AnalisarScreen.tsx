@@ -17,7 +17,7 @@ import { InputField } from '../components/InputField';
 import { CustoRow } from '../components/CustoRow';
 import { calcularFrete } from '../engine/calcularFrete';
 import { colors } from '../theme/colors';
-import { parseNumber, formatCurrency } from '../utils/format';
+import { parseNumber, formatCurrency, aplicarMaquininha } from '../utils/format';
 import { carregarPerfil } from '../utils/storage';
 import { distancias, cidades, getDistancia } from '../data/distancias';
 import type { ResultadoFrete, TipoRetorno, PerfilCaminhao } from '../types';
@@ -72,13 +72,13 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
   const zonaAnteriorRef = useRef<Zona | null>(null);
 
   // Custos da viagem
-  const [pedagio, setPedagio] = useState('150');
-  const [pedagioVolta, setPedagioVolta] = useState('150');
+  const [pedagio, setPedagio] = useState('150,00');
+  const [pedagioVolta, setPedagioVolta] = useState('150,00');
   const [numeroDiarias, setNumeroDiarias] = useState('1');
-  const [hospedagemPorDiaria, setHospedagemPorDiaria] = useState('80');
-  const [alimentacaoPorDia, setAlimentacaoPorDia] = useState('60');
-  const [precoDiesel, setPrecoDiesel] = useState('6.50');
-  const [precoArla, setPrecoArla] = useState('4.50');
+  const [hospedagemPorDiaria, setHospedagemPorDiaria] = useState('80,00');
+  const [alimentacaoPorDia, setAlimentacaoPorDia] = useState('60,00');
+  const [precoDiesel, setPrecoDiesel] = useState('6,50');
+  const [precoArla, setPrecoArla] = useState('4,50');
 
   useEffect(() => {
     carregarPerfil().then(p => {
@@ -399,7 +399,7 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
               <TextInput
                 style={styles.freteValorText}
                 value={valorFrete}
-                onChangeText={setValorFrete}
+                onChangeText={v => setValorFrete(aplicarMaquininha(v, valorFrete))}
                 placeholder="0,00"
                 placeholderTextColor={colors.textMuted}
                 keyboardType="decimal-pad"
@@ -507,14 +507,14 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
             <CustoRow
               label="Pedágio (ida)"
               value={pedagio}
-              onChangeText={setPedagio}
+              onChangeText={v => setPedagio(aplicarMaquininha(v, pedagio))}
               unit="R$"
             />
             {tipoRetorno === 'comCarga' && (
               <CustoRow
                 label="Pedágio (volta)"
                 value={pedagioVolta}
-                onChangeText={setPedagioVolta}
+                onChangeText={v => setPedagioVolta(aplicarMaquininha(v, pedagioVolta))}
                 unit="R$"
               />
             )}
@@ -529,13 +529,13 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
             <CustoRow
               label="Hospedagem"
               value={hospedagemPorDiaria}
-              onChangeText={setHospedagemPorDiaria}
+              onChangeText={v => setHospedagemPorDiaria(aplicarMaquininha(v, hospedagemPorDiaria))}
               unit="R$/diária"
             />
             <CustoRow
               label="Alimentação"
               value={alimentacaoPorDia}
-              onChangeText={setAlimentacaoPorDia}
+              onChangeText={v => setAlimentacaoPorDia(aplicarMaquininha(v, alimentacaoPorDia))}
               unit="R$/dia"
             />
 
@@ -543,13 +543,13 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
             <CustoRow
               label="Preço do diesel"
               value={precoDiesel}
-              onChangeText={setPrecoDiesel}
+              onChangeText={v => setPrecoDiesel(aplicarMaquininha(v, precoDiesel))}
               unit="R$/L"
             />
             <CustoRow
               label="Preço do Arla 32"
               value={precoArla}
-              onChangeText={setPrecoArla}
+              onChangeText={v => setPrecoArla(aplicarMaquininha(v, precoArla))}
               unit="R$/L"
             />
           </View>
