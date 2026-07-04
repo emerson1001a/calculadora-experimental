@@ -4,6 +4,9 @@ services:
     runtime: static
     buildCommand: npm install && npx expo export --platform web
     staticPublishPath: ./dist
+    envVars:
+      - key: EXPO_PUBLIC_SHOW_DEV_TOOLS
+        value: true
     routes:
       - type: rewrite
         source: /*
