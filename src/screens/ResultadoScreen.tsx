@@ -270,7 +270,7 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
           <View style={styles.anttRow}>
             <View>
               <Text style={styles.anttLabel}>Valor mínimo referência</Text>
-              <Text style={styles.anttHint}>R$ 3,20/km · carreta 5 eixos · carga geral</Text>
+              <Text style={styles.anttHint}>Portaria SUROC Nº 4/2026 · carga geral</Text>
             </View>
             <Text style={[
               styles.anttValor,

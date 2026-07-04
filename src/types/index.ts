@@ -53,6 +53,7 @@ export interface EntradaFrete {
   margemDesejada: number;
   custos: Custos;
   distanciaEstimada?: boolean;
+  numeroEixos?: number;
 }
 
 export interface CustoDetalhado {

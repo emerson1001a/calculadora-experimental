@@ -20,11 +20,10 @@ import { colors } from '../theme/colors';
 import { parseNumber, formatCurrency, aplicarMaquininha } from '../utils/format';
 import { carregarPerfil } from '../utils/storage';
 import { distancias, cidades, getDistancia } from '../data/distancias';
+import { calcularPisoANTT } from '../engine/pisoANTT';
 import type { ResultadoFrete, TipoRetorno, PerfilCaminhao } from '../types';
 
 type Zona = 'VERDE' | 'AMARELA' | 'VERMELHA';
-
-const ANTT_PISO_POR_KM = 3.2;
 
 function getZonaNegociar(freteMin: number, margemSlider: number, pisoANTT: number, margemDesejada: number): Zona {
   if (freteMin < pisoANTT) return 'VERMELHA';
@@ -127,7 +126,10 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
   }, [buscaDestino, destinoSelecionado]);
 
   // Cálculo em tempo real para modo "A negociar"
-  const pisoANTTEstimado = useMemo(() => parseNumber(distancia) * ANTT_PISO_POR_KM, [distancia]);
+  const pisoANTTEstimado = useMemo(
+    () => calcularPisoANTT(parseNumber(distancia), perfil?.numeroEixos),
+    [distancia, perfil],
+  );
 
   const custoEstimado = useMemo<number | null>(() => {
     if (!perfil) return null;
@@ -242,6 +244,7 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
       tipoRetorno,
       margemDesejada: margemUsada,
       distanciaEstimada: distanciaVeioMatriz,
+      numeroEixos: perfil?.numeroEixos,
       custos: {
         dieselKmPorLt: perfil.dieselKmPorLt,
         dieselPrecoPorLitro: parseNumber(precoDiesel),

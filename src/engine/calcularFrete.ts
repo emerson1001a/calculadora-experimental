@@ -1,7 +1,5 @@
 import type { EntradaFrete, ResultadoFrete, CustoDetalhado } from '../types';
-
-// Referência: Resolução ANTT 5860/2019 e atualizações — valor base para carreta (5 eixos), carga geral
-const ANTT_PISO_POR_KM = 3.2;
+import { calcularPisoANTT } from './pisoANTT';
 
 export function calcularFrete(entrada: EntradaFrete): ResultadoFrete {
   const { distanciaKm, valorFrete, tipoRetorno, margemDesejada, custos } = entrada;
@@ -39,7 +37,7 @@ export function calcularFrete(entrada: EntradaFrete): ResultadoFrete {
   const custoTotal = Object.values(custoDetalhado).reduce((acc, v) => acc + v, 0);
   const lucro = valorFrete - custoTotal;
   const margemReal = valorFrete > 0 ? (lucro / valorFrete) * 100 : 0;
-  const pisoANTT = distanciaKm * ANTT_PISO_POR_KM;
+  const pisoANTT = calcularPisoANTT(distanciaKm, entrada.numeroEixos);
   const abaixoPisoANTT = valorFrete < pisoANTT;
 
   let veredicto: ResultadoFrete['veredicto'];

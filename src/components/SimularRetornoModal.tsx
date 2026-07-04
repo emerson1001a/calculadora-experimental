@@ -13,8 +13,7 @@ import {
 import { colors } from '../theme/colors';
 import { formatCurrency, parseNumber } from '../utils/format';
 import type { ResultadoFrete } from '../types';
-
-const ANTT_PISO_POR_KM = 3.2;
+import { calcularPisoANTT } from '../engine/pisoANTT';
 
 function fmtK(v: number): string {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
@@ -86,7 +85,7 @@ export function SimularRetornoModal({ visible, onClose, resultado }: Props) {
 
   const podeProsseguir = parseNumber(valorFrete) > 0;
   const distTotal = entrada.distanciaKm * 2;
-  const pisoTotal = distTotal * ANTT_PISO_POR_KM;
+  const pisoTotal = calcularPisoANTT(entrada.distanciaKm, entrada.numeroEixos) * 2;
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={fechar}>
