@@ -70,6 +70,8 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
   const [manutencaoPorKm, setManutencaoPorKm] = useState('0,15');
   const [mostrarHintManutencao, setMostrarHintManutencao] = useState(false);
   const manutencaoManualRef = useRef(false);
+  const anoRef = useRef(ano);
+  anoRef.current = ano;
   const [pneusPorKm, setPneusPorKm] = useState('0,10');
   const [tipoCarroceria, setTipoCarroceria] = useState<TipoCarroceria | undefined>(undefined);
   const [tipoVeiculo, setTipoVeiculo] = useState<TipoVeiculo | undefined>(undefined);
@@ -131,19 +133,20 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
     setMostrarHintDepreciacao(true);
   }
 
-  function calcularManutencaoAuto(categoria: 'pesado' | 'semipesado' | 'medio_leve', anoFab: string, forcar = false) {
-    if (manutencaoManualRef.current && !forcar) return;
+  const TAXAS_MANUTENCAO: Record<'pesado' | 'semipesado' | 'medio_leve', [number, number, number, number]> = {
+    pesado:      [0.20, 0.35, 0.50, 0.70],
+    semipesado:  [0.16, 0.28, 0.40, 0.56],
+    medio_leve:  [0.12, 0.20, 0.30, 0.42],
+  };
+
+  function calcularManutencaoAuto(categoria: 'pesado' | 'semipesado' | 'medio_leve', anoFab: string) {
+    if (manutencaoManualRef.current) return;
     if (!anoFab) return;
     const a = parseInt(anoFab, 10);
     const anoAtual = new Date().getFullYear();
     if (!a || a < 1950 || a > anoAtual) return;
     const idade = Math.max(0, anoAtual - a);
-    const taxas: Record<typeof categoria, [number, number, number, number]> = {
-      pesado:      [0.20, 0.35, 0.50, 0.70],
-      semipesado:  [0.16, 0.28, 0.40, 0.56],
-      medio_leve:  [0.12, 0.20, 0.30, 0.42],
-    };
-    const t = taxas[categoria];
+    const t = TAXAS_MANUTENCAO[categoria];
     const custo = idade <= 1 ? t[0] : idade <= 5 ? t[1] : idade <= 10 ? t[2] : t[3];
     setManutencaoPorKm(toMaquininha(custo));
     setMostrarHintManutencao(true);
@@ -168,8 +171,17 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
       setArlaKmPorLt('0');
       setArlaDesabilitada(true);
     }
+    // Sempre recalcula ao selecionar modelo — usa anoRef para evitar closure stale
     manutencaoManualRef.current = false;
-    calcularManutencaoAuto(item.categoria, ano, true);
+    const anoAtual = new Date().getFullYear();
+    const a = parseInt(anoRef.current, 10);
+    if (a >= 1950 && a <= anoAtual) {
+      const idade = Math.max(0, anoAtual - a);
+      const t = TAXAS_MANUTENCAO[item.categoria];
+      const custo = idade <= 1 ? t[0] : idade <= 5 ? t[1] : idade <= 10 ? t[2] : t[3];
+      setManutencaoPorKm(toMaquininha(custo));
+      setMostrarHintManutencao(true);
+    }
   }
 
   function handleSelecionarCarroceria(op: TipoCarroceria) {
