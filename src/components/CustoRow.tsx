@@ -7,20 +7,21 @@ interface CustoRowProps {
   value: string;
   onChangeText: (v: string) => void;
   unit: string;
+  disabled?: boolean;
 }
 
-export function CustoRow({ label, value, onChangeText, unit }: CustoRowProps) {
+export function CustoRow({ label, value, onChangeText, unit, disabled }: CustoRowProps) {
   const [editando, setEditando] = useState(false);
 
   return (
-    <View style={styles.row}>
-      <Text style={styles.label} numberOfLines={1}>{label}</Text>
+    <View style={[styles.row, disabled && styles.rowDisabled]}>
+      <Text style={[styles.label, disabled && styles.labelDisabled]} numberOfLines={1}>{label}</Text>
       <TouchableOpacity
-        style={styles.inputWrap}
-        onPress={() => setEditando(true)}
-        activeOpacity={1}
+        style={[styles.inputWrap, disabled && styles.inputWrapDisabled]}
+        onPress={() => !disabled && setEditando(true)}
+        activeOpacity={disabled ? 1 : 1}
       >
-        {editando ? (
+        {editando && !disabled ? (
           <TextInput
             style={styles.input}
             value={value}
@@ -32,7 +33,9 @@ export function CustoRow({ label, value, onChangeText, unit }: CustoRowProps) {
             selectTextOnFocus
           />
         ) : (
-          <Text style={styles.valor} numberOfLines={1}>{value || '0'}</Text>
+          <Text style={[styles.valor, disabled && styles.valorDisabled]} numberOfLines={1}>
+            {disabled ? 'N/A' : (value || '0')}
+          </Text>
         )}
         <Text style={styles.unit}>{unit}</Text>
       </TouchableOpacity>
@@ -84,5 +87,18 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 11,
     marginLeft: 4,
+  },
+  rowDisabled: {
+    opacity: 0.45,
+  },
+  labelDisabled: {
+    color: colors.textMuted,
+  },
+  inputWrapDisabled: {
+    backgroundColor: colors.background,
+  },
+  valorDisabled: {
+    color: colors.textMuted,
+    fontStyle: 'italic' as const,
   },
 });

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
+  TextInput,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -15,6 +16,9 @@ import { CustoRow } from '../components/CustoRow';
 import { colors } from '../theme/colors';
 import { parseNumber, aplicarMaquininha, toMaquininha } from '../utils/format';
 import { salvarPerfil, carregarPerfil, limparPerfil } from '../utils/storage';
+import { caminhoes, marcas } from '../data/caminhoes';
+import type { ModeloCaminhao } from '../data/caminhoes';
+import { eixosPorCarroceria } from '../data/eixosPorCarroceria';
 import type { PerfilCaminhao, TipoCarroceria, TipoVeiculo, SimNao } from '../types';
 
 const VEICULOS: { categoria: string; opcoes: TipoVeiculo[] }[] = [
@@ -48,8 +52,14 @@ interface Props {
 }
 
 export function PerfilCaminhaoScreen({ onVoltar }: Props) {
-  const [marca, setMarca] = useState('');
-  const [modelo, setModelo] = useState('');
+  // Autocomplete marca
+  const [buscaMarca, setBuscaMarca] = useState('');
+  const [marcaSelecionada, setMarcaSelecionada] = useState<string | null>(null);
+  // Autocomplete modelo
+  const [buscaModelo, setBuscaModelo] = useState('');
+  const [modeloSelecionado, setModeloSelecionado] = useState(false);
+  const [arlaDesabilitada, setArlaDesabilitada] = useState(false);
+
   const [ano, setAno] = useState('');
   const [dieselKmPorLt, setDieselKmPorLt] = useState('3.5');
   const [arlaKmPorLt, setArlaKmPorLt] = useState('70');
@@ -65,8 +75,9 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
   useEffect(() => {
     carregarPerfil().then(p => {
       if (!p) return;
-      setMarca(p.marca);
-      setModelo(p.modelo);
+      setBuscaMarca(p.marca);
+      setMarcaSelecionada(p.marca);
+      setBuscaModelo(p.modelo);
       setAno(p.ano);
       setDieselKmPorLt(String(p.dieselKmPorLt));
       setArlaKmPorLt(String(p.arlaKmPorLt));
@@ -80,6 +91,58 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
       if (p.numeroEixos) setNumeroEixos(String(p.numeroEixos));
     });
   }, []);
+
+  const sugestoesMarca = useMemo(() => {
+    if (buscaMarca.length < 1 || marcaSelecionada) return [];
+    const q = buscaMarca.toLowerCase();
+    return marcas.filter(m => m.toLowerCase().includes(q)).slice(0, 6);
+  }, [buscaMarca, marcaSelecionada]);
+
+  const sugestoesModelo = useMemo(() => {
+    if (!marcaSelecionada || buscaModelo.length < 1 || modeloSelecionado) return [];
+    const q = buscaModelo.toLowerCase();
+    const lista = caminhoes[marcaSelecionada] ?? [];
+    return lista.filter(m => m.modelo.toLowerCase().includes(q)).slice(0, 6);
+  }, [marcaSelecionada, buscaModelo, modeloSelecionado]);
+
+  const placeholderModelo = useMemo(() => {
+    if (!marcaSelecionada) return 'Selecione uma marca primeiro';
+    const lista = caminhoes[marcaSelecionada] ?? [];
+    if (lista.length === 0) return 'Digite o modelo';
+    return lista.slice(0, 3).map(m => m.modelo).join(', ') + '...';
+  }, [marcaSelecionada]);
+
+  function selecionarMarca(m: string) {
+    setBuscaMarca(m);
+    setMarcaSelecionada(m);
+    setBuscaModelo('');
+    setModeloSelecionado(false);
+    setArlaDesabilitada(false);
+  }
+
+  function selecionarModelo(item: ModeloCaminhao) {
+    setBuscaModelo(item.modelo);
+    setModeloSelecionado(true);
+    setDieselKmPorLt(String(item.consumoDieselKmL));
+    if (item.consumoArlaKmL !== null) {
+      setArlaKmPorLt(String(item.consumoArlaKmL));
+      setArlaDesabilitada(false);
+    } else {
+      setArlaKmPorLt('0');
+      setArlaDesabilitada(true);
+    }
+  }
+
+  function handleSelecionarCarroceria(op: TipoCarroceria) {
+    const nova = tipoCarroceria === op ? undefined : op;
+    setTipoCarroceria(nova);
+    if (nova) {
+      const eixosSugerido = eixosPorCarroceria[nova];
+      if (eixosSugerido !== undefined) {
+        setNumeroEixos(String(eixosSugerido));
+      }
+    }
+  }
 
   function handleLimparPerfil() {
     if (Platform.OS === 'web') {
@@ -100,13 +163,13 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
   }
 
   async function handleSalvar() {
-    if (!marca.trim() || !modelo.trim()) {
+    if (!buscaMarca.trim() || !buscaModelo.trim()) {
       Alert.alert('Campos obrigatórios', 'Informe a marca e o modelo do caminhão.');
       return;
     }
     const perfil: PerfilCaminhao = {
-      marca: marca.trim(),
-      modelo: modelo.trim(),
+      marca: buscaMarca.trim(),
+      modelo: buscaModelo.trim(),
       ano: ano.trim(),
       dieselKmPorLt: parseNumber(dieselKmPorLt) || 3.5,
       arlaKmPorLt: parseNumber(arlaKmPorLt) || 70,
@@ -147,18 +210,54 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
           {/* Identificação */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Identificação</Text>
-            <InputField
-              label="Marca"
-              value={marca}
-              onChangeText={setMarca}
-              placeholder="Ex: Volvo, Scania, Mercedes"
+
+            <Text style={styles.fieldLabel}>Marca</Text>
+            <TextInput
+              style={styles.autoInput}
+              value={buscaMarca}
+              onChangeText={v => { setBuscaMarca(v); setMarcaSelecionada(null); }}
+              placeholder="Volvo, Scania, Mercedes-Benz..."
+              placeholderTextColor={colors.textMuted}
             />
-            <InputField
-              label="Modelo"
-              value={modelo}
-              onChangeText={setModelo}
-              placeholder="Ex: FH 540, R 450, Actros"
+            {sugestoesMarca.length > 0 && (
+              <View style={styles.sugestoesBox}>
+                {sugestoesMarca.map(m => (
+                  <TouchableOpacity
+                    key={m}
+                    style={styles.sugestaoItem}
+                    onPress={() => selecionarMarca(m)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.sugestaoTexto}>{m}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            <Text style={[styles.fieldLabel, styles.fieldLabelMt]}>Modelo</Text>
+            <TextInput
+              style={[styles.autoInput, !marcaSelecionada && styles.autoInputDisabled]}
+              value={buscaModelo}
+              onChangeText={v => { setBuscaModelo(v); setModeloSelecionado(false); }}
+              placeholder={placeholderModelo}
+              placeholderTextColor={colors.textMuted}
+              editable={!!marcaSelecionada}
             />
+            {sugestoesModelo.length > 0 && (
+              <View style={styles.sugestoesBox}>
+                {sugestoesModelo.map(item => (
+                  <TouchableOpacity
+                    key={item.modelo}
+                    style={styles.sugestaoItem}
+                    onPress={() => selecionarModelo(item)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.sugestaoTexto}>{item.modelo}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
             <InputField
               label="Ano"
               value={ano}
@@ -213,7 +312,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
                     <TouchableOpacity
                       key={op}
                       style={[styles.chip, tipoCarroceria === op && styles.chipAtivo]}
-                      onPress={() => setTipoCarroceria(tipoCarroceria === op ? undefined : op)}
+                      onPress={() => handleSelecionarCarroceria(op)}
                       activeOpacity={0.7}
                     >
                       <Text style={[styles.chipTexto, tipoCarroceria === op && styles.chipTextoAtivo]}>
@@ -278,7 +377,13 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
               value={arlaKmPorLt}
               onChangeText={setArlaKmPorLt}
               unit="Km/L"
+              disabled={arlaDesabilitada}
             />
+            {modeloSelecionado && (
+              <Text style={styles.consumoHint}>
+                Valores estimados — edite se souber o consumo real
+              </Text>
+            )}
           </View>
 
           {/* Custo por km */}
@@ -453,5 +558,55 @@ const styles = StyleSheet.create({
   btnLimparDevText: {
     color: '#E57373',
     fontSize: 12,
+  },
+
+  // Autocomplete
+  fieldLabel: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+    marginBottom: 6,
+    marginTop: 12,
+  },
+  fieldLabelMt: {
+    marginTop: 16,
+  },
+  autoInput: {
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 12,
+    height: 44,
+    color: colors.text,
+    fontSize: 15,
+  },
+  autoInputDisabled: {
+    opacity: 0.5,
+  },
+  sugestoesBox: {
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    overflow: 'hidden' as const,
+    marginTop: 2,
+  },
+  sugestaoItem: {
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  sugestaoTexto: {
+    color: colors.text,
+    fontSize: 14,
+  },
+  consumoHint: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontStyle: 'italic' as const,
+    marginTop: 8,
   },
 });
