@@ -63,7 +63,6 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
 
   // Frete
   const [valorFrete, setValorFrete] = useState('');
-  const [margem, setMargem] = useState('15');
   const [tipoRetorno, setTipoRetorno] = useState<TipoRetorno>('nenhum');
 
   // Modo "A negociar"
@@ -160,7 +159,7 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
     return custoEstimado / (1 - margemNegociar / 100);
   }, [custoEstimado, margemNegociar]);
 
-  const margemDesejadaNum = parseNumber(margem) || 15;
+  const margemDesejadaNum = 0;
 
   const zonaNegociar: Zona = freteMinimo === null || !isFinite(freteMinimo)
     ? 'VERDE'
@@ -180,8 +179,6 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
 
   function toggleANegociar() {
     if (!aNegociar) {
-      const m = Math.min(50, Math.max(0, Math.round(parseNumber(margem)) || 15));
-      setMargemNegociar(m);
       zonaAnteriorRef.current = null;
     }
     setANegociar(v => !v);
@@ -232,7 +229,7 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
         Alert.alert('Campo obrigatório', 'Informe o valor do frete.');
         return;
       }
-      margemUsada = parseNumber(margem);
+      margemUsada = 0;
     }
 
     const nDiarias = parseNumber(numeroDiarias);
@@ -464,14 +461,6 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
               </View>
             )}
 
-            <InputField
-              label="Margem desejada"
-              value={margem}
-              onChangeText={setMargem}
-              placeholder="15"
-              keyboardType="decimal-pad"
-              suffix="%"
-            />
             <View style={styles.retornoRow}>
               <Text style={styles.retornoLabel}>Tipo de viagem</Text>
               <View style={styles.retornoSegment}>
