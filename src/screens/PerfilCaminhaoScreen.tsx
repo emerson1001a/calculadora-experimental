@@ -68,10 +68,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
   const [depreciacaoPorKm, setDepreciacaoPorKm] = useState('0,20');
   const [mostrarHintDepreciacao, setMostrarHintDepreciacao] = useState(false);
   const [manutencaoPorKm, setManutencaoPorKm] = useState('0,15');
-  const [mostrarHintManutencao, setMostrarHintManutencao] = useState(false);
-  const manutencaoManualRef = useRef(false);
-  const anoRef = useRef(ano);
-  anoRef.current = ano;
+  const [editadoManualmente, setEditadoManualmente] = useState(false);
   const [pneusPorKm, setPneusPorKm] = useState('0,10');
   const [tipoCarroceria, setTipoCarroceria] = useState<TipoCarroceria | undefined>(undefined);
   const [tipoVeiculo, setTipoVeiculo] = useState<TipoVeiculo | undefined>(undefined);
@@ -90,6 +87,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
       setArlaKmPorLt(String(p.arlaKmPorLt));
       setDepreciacaoPorKm(toMaquininha(p.depreciacaoPorKm));
       setManutencaoPorKm(toMaquininha(p.manutencaoPorKm));
+      setEditadoManualmente(true);
       setPneusPorKm(toMaquininha(p.pneusPorKm));
       if (p.tipoCarroceria) setTipoCarroceria(p.tipoCarroceria);
       if (p.tipoVeiculo) setTipoVeiculo(p.tipoVeiculo);
@@ -133,24 +131,25 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
     setMostrarHintDepreciacao(true);
   }
 
-  const TAXAS_MANUTENCAO: Record<'pesado' | 'semipesado' | 'medio_leve', [number, number, number, number]> = {
-    pesado:      [0.20, 0.35, 0.50, 0.70],
-    semipesado:  [0.16, 0.28, 0.40, 0.56],
-    medio_leve:  [0.12, 0.20, 0.30, 0.42],
-  };
-
-  function calcularManutencaoAuto(categoria: 'pesado' | 'semipesado' | 'medio_leve', anoFab: string) {
-    if (manutencaoManualRef.current) return;
-    if (!anoFab) return;
-    const a = parseInt(anoFab, 10);
+  useEffect(() => {
+    if (editadoManualmente) return;
+    if (!marcaSelecionada || !buscaModelo || !ano) return;
+    const lista = caminhoes[marcaSelecionada] ?? [];
+    const item = lista.find(m => m.modelo === buscaModelo);
+    if (!item) return;
+    const a = parseInt(ano, 10);
     const anoAtual = new Date().getFullYear();
     if (!a || a < 1950 || a > anoAtual) return;
     const idade = Math.max(0, anoAtual - a);
-    const t = TAXAS_MANUTENCAO[categoria];
+    const taxas = {
+      pesado:     [0.20, 0.35, 0.50, 0.70] as const,
+      semipesado: [0.16, 0.28, 0.40, 0.56] as const,
+      medio_leve: [0.12, 0.20, 0.30, 0.42] as const,
+    };
+    const t = taxas[item.categoria];
     const custo = idade <= 1 ? t[0] : idade <= 5 ? t[1] : idade <= 10 ? t[2] : t[3];
     setManutencaoPorKm(toMaquininha(custo));
-    setMostrarHintManutencao(true);
-  }
+  }, [marcaSelecionada, buscaModelo, ano, editadoManualmente]);
 
   function selecionarMarca(m: string) {
     setBuscaMarca(m);
@@ -158,6 +157,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
     setBuscaModelo('');
     setModeloSelecionado(false);
     setArlaDesabilitada(false);
+    setEditadoManualmente(false);
   }
 
   function selecionarModelo(item: ModeloCaminhao) {
@@ -171,17 +171,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
       setArlaKmPorLt('0');
       setArlaDesabilitada(true);
     }
-    // Sempre recalcula ao selecionar modelo — usa anoRef para evitar closure stale
-    manutencaoManualRef.current = false;
-    const anoAtual = new Date().getFullYear();
-    const a = parseInt(anoRef.current, 10);
-    if (a >= 1950 && a <= anoAtual) {
-      const idade = Math.max(0, anoAtual - a);
-      const t = TAXAS_MANUTENCAO[item.categoria];
-      const custo = idade <= 1 ? t[0] : idade <= 5 ? t[1] : idade <= 10 ? t[2] : t[3];
-      setManutencaoPorKm(toMaquininha(custo));
-      setMostrarHintManutencao(true);
-    }
+    setEditadoManualmente(false);
   }
 
   function handleSelecionarCarroceria(op: TipoCarroceria) {
@@ -316,10 +306,8 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
               value={ano}
               onChangeText={v => {
                 setAno(v);
+                setEditadoManualmente(false);
                 calcularDepreciacaoAuto(valorCaminhao, v, kmPorAno);
-                const modeloItem = (marcaSelecionada ? caminhoes[marcaSelecionada] ?? [] : [])
-                  .find(m => m.modelo === buscaModelo);
-                if (modeloItem) calcularManutencaoAuto(modeloItem.categoria, v);
               }}
               placeholder="Ex: 2022"
               keyboardType="numeric"
@@ -493,13 +481,12 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
               label="Manutenção"
               value={manutencaoPorKm}
               onChangeText={v => {
-                manutencaoManualRef.current = true;
-                setMostrarHintManutencao(false);
+                setEditadoManualmente(true);
                 setManutencaoPorKm(aplicarMaquininha(v, manutencaoPorKm));
               }}
               unit="R$/km"
             />
-            {mostrarHintManutencao && (
+            {!editadoManualmente && modeloSelecionado && (
               <Text style={styles.consumoHint}>
                 Calculado automaticamente — edite se preferir
               </Text>
