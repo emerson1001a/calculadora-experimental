@@ -48,8 +48,6 @@ interface Props {
 }
 
 export function PerfilCaminhaoScreen({ onVoltar }: Props) {
-  console.log('SHOW_DEV_TOOLS:', process.env.EXPO_PUBLIC_SHOW_DEV_TOOLS);
-
   const [marca, setMarca] = useState('');
   const [modelo, setModelo] = useState('');
   const [ano, setAno] = useState('');
@@ -311,7 +309,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
             <Text style={styles.btnSalvarText}>SALVAR CAMINHÃO</Text>
           </TouchableOpacity>
 
-          {(process.env.EXPO_PUBLIC_SHOW_DEV_TOOLS === 'true') && (
+          {true && (
             <TouchableOpacity
               style={styles.btnLimparDev}
               onPress={handleLimparPerfil}
