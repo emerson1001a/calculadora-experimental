@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
@@ -116,7 +117,32 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
   const distTotal = entrada.distanciaKm * (temRetorno ? 2 : 1);
   const [modalAberto, setModalAberto] = useState(false);
   const [scrollEnabled, setScrollEnabled] = useState(true);
+  const [detalheAberto, setDetalheAberto] = useState(false);
+  const detalheAnim = useRef(new Animated.Value(0)).current;
   const conselhos = obterConselhos(resultado);
+
+  function toggleDetalhe() {
+    const toValue = detalheAberto ? 0 : 1;
+    setDetalheAberto(!detalheAberto);
+    Animated.timing(detalheAnim, {
+      toValue,
+      duration: 220,
+      useNativeDriver: false,
+    }).start();
+  }
+
+  const detalheAltura = detalheAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 380],
+  });
+  const detalheOpacidade = detalheAnim.interpolate({
+    inputRange: [0, 0.4, 1],
+    outputRange: [0, 0, 1],
+  });
+  const chevronRotacao = detalheAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['90deg', '-90deg'],
+  });
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -277,19 +303,31 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
           />
         </View>
 
-        {/* DETALHAMENTO DE CUSTOS */}
+        {/* DETALHAMENTO DE CUSTOS — accordion */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Detalhamento de Custos</Text>
-          <LinhaDetalhe label="Diesel" valor={custoDetalhado.diesel} />
-          <LinhaDetalhe label="Arla 32" valor={custoDetalhado.arla} />
-          <LinhaDetalhe label="Pedágio" valor={custoDetalhado.pedagio} />
-          <LinhaDetalhe label="Alimentação" valor={custoDetalhado.alimentacao} />
-          <LinhaDetalhe label="Pernoite" valor={custoDetalhado.pernoite} />
-          <LinhaDetalhe label="Manutenção" valor={custoDetalhado.manutencao} />
-          <LinhaDetalhe label="Pneus" valor={custoDetalhado.pneus} />
-          <LinhaDetalhe label="Depreciação" valor={custoDetalhado.depreciacao} />
-          <View style={styles.totalSeparator} />
-          <LinhaDetalhe label="CUSTO TOTAL" valor={custoTotal} destaque />
+          <TouchableOpacity
+            style={styles.accordionHeader}
+            onPress={toggleDetalhe}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.cardTitle}>Detalhamento de Custos</Text>
+            <Animated.Text style={[styles.chevron, { transform: [{ rotate: chevronRotacao }] }]}>
+              ›
+            </Animated.Text>
+          </TouchableOpacity>
+
+          <Animated.View style={{ maxHeight: detalheAltura, overflow: 'hidden', opacity: detalheOpacidade }}>
+            <LinhaDetalhe label="Diesel" valor={custoDetalhado.diesel} />
+            <LinhaDetalhe label="Arla 32" valor={custoDetalhado.arla} />
+            <LinhaDetalhe label="Pedágio" valor={custoDetalhado.pedagio} />
+            <LinhaDetalhe label="Alimentação" valor={custoDetalhado.alimentacao} />
+            <LinhaDetalhe label="Pernoite" valor={custoDetalhado.pernoite} />
+            <LinhaDetalhe label="Manutenção" valor={custoDetalhado.manutencao} />
+            <LinhaDetalhe label="Pneus" valor={custoDetalhado.pneus} />
+            <LinhaDetalhe label="Depreciação" valor={custoDetalhado.depreciacao} />
+            <View style={styles.totalSeparator} />
+            <LinhaDetalhe label="CUSTO TOTAL" valor={custoTotal} destaque />
+          </Animated.View>
         </View>
 
         <TouchableOpacity style={styles.btnVoltar} onPress={onVoltar} activeOpacity={0.85}>
@@ -529,6 +567,21 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 13,
     lineHeight: 19,
+  },
+
+  // Accordion
+  accordionHeader: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 0,
+  },
+  chevron: {
+    color: colors.primary,
+    fontSize: 22,
+    fontWeight: '600' as const,
+    lineHeight: 24,
+    marginBottom: 4,
   },
 
   // Offline banner
