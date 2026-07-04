@@ -153,6 +153,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
   }, [marcaSelecionada, buscaModelo, ano, editadoManualmente]);
 
   function selecionarMarca(m: string) {
+    console.log('[selecionarMarca] chamada com:', m);
     setBuscaMarca(m);
     setMarcaSelecionada(m);
     setBuscaModelo('');
@@ -162,6 +163,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
   }
 
   function selecionarModelo(item: ModeloCaminhao) {
+    console.log('[selecionarModelo] chamada com:', item.modelo);
     setBuscaModelo(item.modelo);
     setModeloSelecionado(true);
     setDieselKmPorLt(String(item.consumoDieselKmL));
