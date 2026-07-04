@@ -8,6 +8,7 @@ interface InputFieldProps {
   onChangeText: (v: string) => void;
   placeholder?: string;
   keyboardType?: 'default' | 'numeric' | 'decimal-pad';
+  inputMode?: 'decimal' | 'numeric' | 'text' | 'none';
   prefix?: string;
   suffix?: string;
   editable?: boolean;
@@ -19,10 +20,13 @@ export function InputField({
   onChangeText,
   placeholder = '0',
   keyboardType = 'default',
+  inputMode,
   prefix,
   suffix,
   editable = true,
 }: InputFieldProps) {
+  const resolvedInputMode = inputMode ?? (keyboardType !== 'default' ? 'decimal' : undefined);
+
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
@@ -35,6 +39,7 @@ export function InputField({
           placeholder={placeholder}
           placeholderTextColor={colors.textMuted}
           keyboardType={keyboardType}
+          inputMode={resolvedInputMode}
           editable={editable}
           selectTextOnFocus
         />

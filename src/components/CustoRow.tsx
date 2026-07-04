@@ -27,6 +27,7 @@ export function CustoRow({ label, value, onChangeText, unit }: CustoRowProps) {
             onChangeText={onChangeText}
             onBlur={() => setEditando(false)}
             keyboardType="decimal-pad"
+            inputMode="decimal"
             autoFocus
             selectTextOnFocus
           />

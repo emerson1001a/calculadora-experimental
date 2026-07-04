@@ -403,6 +403,7 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
                 placeholder="0,00"
                 placeholderTextColor={colors.textMuted}
                 keyboardType="decimal-pad"
+                inputMode="decimal"
                 editable={!aNegociar}
               />
             </View>
