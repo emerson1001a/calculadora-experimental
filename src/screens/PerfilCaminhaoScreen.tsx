@@ -131,22 +131,19 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
     setMostrarHintDepreciacao(true);
   }
 
-  function calcularManutencaoAuto(modeloStr: string, marcaStr: string | null, anoFab: string, forcar = false) {
+  function calcularManutencaoAuto(categoria: 'pesado' | 'semipesado' | 'medio_leve', anoFab: string, forcar = false) {
     if (manutencaoManualRef.current && !forcar) return;
-    if (!marcaStr || !modeloStr || !anoFab) return;
-    const lista = caminhoes[marcaStr] ?? [];
-    const item = lista.find(m => m.modelo === modeloStr);
-    if (!item) return;
+    if (!anoFab) return;
     const a = parseInt(anoFab, 10);
     const anoAtual = new Date().getFullYear();
     if (!a || a < 1950 || a > anoAtual) return;
     const idade = Math.max(0, anoAtual - a);
-    const taxas: Record<typeof item.categoria, [number, number, number, number]> = {
+    const taxas: Record<typeof categoria, [number, number, number, number]> = {
       pesado:      [0.20, 0.35, 0.50, 0.70],
       semipesado:  [0.16, 0.28, 0.40, 0.56],
       medio_leve:  [0.12, 0.20, 0.30, 0.42],
     };
-    const t = taxas[item.categoria];
+    const t = taxas[categoria];
     const custo = idade <= 1 ? t[0] : idade <= 5 ? t[1] : idade <= 10 ? t[2] : t[3];
     setManutencaoPorKm(toMaquininha(custo));
     setMostrarHintManutencao(true);
@@ -171,7 +168,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
       setArlaKmPorLt('0');
       setArlaDesabilitada(true);
     }
-    calcularManutencaoAuto(item.modelo, marcaSelecionada, ano, true);
+    calcularManutencaoAuto(item.categoria, ano, true);
   }
 
   function handleSelecionarCarroceria(op: TipoCarroceria) {
@@ -307,7 +304,9 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
               onChangeText={v => {
                 setAno(v);
                 calcularDepreciacaoAuto(valorCaminhao, v, kmPorAno);
-                calcularManutencaoAuto(buscaModelo, marcaSelecionada, v);
+                const modeloItem = (marcaSelecionada ? caminhoes[marcaSelecionada] ?? [] : [])
+                  .find(m => m.modelo === buscaModelo);
+                if (modeloItem) calcularManutencaoAuto(modeloItem.categoria, v);
               }}
               placeholder="Ex: 2022"
               keyboardType="numeric"
