@@ -132,13 +132,10 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
   }
 
   useEffect(() => {
-    console.log('[manu-effect]', { editadoManualmente, marcaSelecionada, buscaModelo, ano });
     if (editadoManualmente) return;
     if (!marcaSelecionada || !buscaModelo || !ano) return;
     const lista = caminhoes[marcaSelecionada] ?? [];
-    console.log('[manu-lista]', lista.length, 'modelos para', marcaSelecionada);
     const item = lista.find(m => m.modelo === buscaModelo);
-    console.log('[manu-item]', item);
     if (!item) return;
     const a = parseInt(ano, 10);
     const anoAtual = new Date().getFullYear();
@@ -151,13 +148,10 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
     };
     const t = taxas[item.categoria];
     const custo = idade <= 1 ? t[0] : idade <= 5 ? t[1] : idade <= 10 ? t[2] : t[3];
-    console.log('[manu-custo]', custo);
-    console.log('[manu-set]', toMaquininha(custo), '| estado atual:', manutencaoPorKm);
     setManutencaoPorKm(toMaquininha(custo));
   }, [marcaSelecionada, buscaModelo, ano, editadoManualmente]);
 
   function selecionarMarca(m: string) {
-    console.log('[selecionarMarca] chamada com:', m);
     setBuscaMarca(m);
     setMarcaSelecionada(m);
     setBuscaModelo('');
@@ -167,7 +161,6 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
   }
 
   function selecionarModelo(item: ModeloCaminhao) {
-    console.log('[selecionarModelo] chamada com:', item.modelo);
     setBuscaModelo(item.modelo);
     setModeloSelecionado(true);
     setDieselKmPorLt(String(item.consumoDieselKmL));
