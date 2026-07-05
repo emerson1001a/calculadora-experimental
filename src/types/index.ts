@@ -18,6 +18,7 @@ export interface PerfilCaminhao {
   marca: string;
   modelo: string;
   ano: string;
+  placa?: string;
   dieselKmPorLt: number;
   arlaKmPorLt: number;
   depreciacaoPorKm: number;

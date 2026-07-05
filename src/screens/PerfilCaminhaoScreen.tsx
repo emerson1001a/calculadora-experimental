@@ -61,6 +61,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
   const [arlaDesabilitada, setArlaDesabilitada] = useState(false);
 
   const [ano, setAno] = useState('');
+  const [placa, setPlaca] = useState('');
   const [dieselKmPorLt, setDieselKmPorLt] = useState('3.5');
   const [arlaKmPorLt, setArlaKmPorLt] = useState('70');
   const [valorCaminhao, setValorCaminhao] = useState('');
@@ -84,6 +85,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
       setBuscaModelo(p.modelo);
       setModeloSelecionado(true);
       setAno(p.ano);
+      if (p.placa) setPlaca(p.placa);
       setDieselKmPorLt(String(p.dieselKmPorLt));
       setArlaKmPorLt(String(p.arlaKmPorLt));
       setDepreciacaoPorKm(toMaquininha(p.depreciacaoPorKm));
@@ -132,10 +134,13 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
   }
 
   useEffect(() => {
+    console.log('[manu-effect]', { editadoManualmente, marcaSelecionada, buscaModelo, ano });
     if (editadoManualmente) return;
     if (!marcaSelecionada || !buscaModelo || !ano) return;
     const lista = caminhoes[marcaSelecionada] ?? [];
+    console.log('[manu-lista]', lista.length, 'modelos para', marcaSelecionada);
     const item = lista.find(m => m.modelo === buscaModelo);
+    console.log('[manu-item]', item);
     if (!item) return;
     const a = parseInt(ano, 10);
     const anoAtual = new Date().getFullYear();
@@ -148,7 +153,9 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
     };
     const t = taxas[item.categoria];
     const custo = idade <= 1 ? t[0] : idade <= 5 ? t[1] : idade <= 10 ? t[2] : t[3];
-    setManutencaoPorKm(toMaquininha(custo));
+    const custoFormatado = toMaquininha(custo);
+    console.log('[manu-custo]', custo, '→ toMaquininha:', custoFormatado);
+    setManutencaoPorKm(custoFormatado);
   }, [marcaSelecionada, buscaModelo, ano, editadoManualmente]);
 
   function selecionarMarca(m: string) {
@@ -212,6 +219,7 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
       marca: buscaMarca.trim(),
       modelo: buscaModelo.trim(),
       ano: ano.trim(),
+      placa: placa.trim() || undefined,
       dieselKmPorLt: parseNumber(dieselKmPorLt) || 3.5,
       arlaKmPorLt: parseNumber(arlaKmPorLt) || 70,
       depreciacaoPorKm: parseNumber(depreciacaoPorKm) || 0.20,
@@ -312,6 +320,19 @@ export function PerfilCaminhaoScreen({ onVoltar }: Props) {
               placeholder="Ex: 2022"
               keyboardType="numeric"
             />
+
+            <Text style={[styles.fieldLabel, styles.fieldLabelMt]}>Placa</Text>
+            <TextInput
+              style={styles.autoInput}
+              value={placa}
+              onChangeText={v => setPlaca(v.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 8))}
+              placeholder="Ex: ABC-1D23"
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              maxLength={8}
+            />
+
             <InputField
               label="Número de Eixos"
               value={numeroEixos}
