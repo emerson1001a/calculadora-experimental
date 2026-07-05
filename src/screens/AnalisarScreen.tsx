@@ -556,13 +556,11 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
             {/* Painel "A negociar" */}
             {aNegociar && (
               <View style={styles.aNegociarPanel}>
-                {!perfil ? (
+                {custoEstimado === null ? (
                   <Text style={styles.aNegociarHint}>
-                    Cadastre seu caminhão para calcular o frete mínimo
-                  </Text>
-                ) : custoEstimado === null ? (
-                  <Text style={styles.aNegociarHint}>
-                    Informe a distância para ver o frete mínimo
+                    {parseNumber(distancia) <= 0
+                      ? 'Informe a distância para ver o frete mínimo'
+                      : 'Preencha o consumo de diesel e Arla nos campos acima'}
                   </Text>
                 ) : (
                   <>
