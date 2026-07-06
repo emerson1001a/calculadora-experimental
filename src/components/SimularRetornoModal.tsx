@@ -84,9 +84,7 @@ export function SimularRetornoModal({ visible, onClose, resultado }: Props) {
   }
 
   const podeProsseguir = parseNumber(valorFrete) > 0;
-  const distTotal = entrada.distanciaKm * 2;
   const pisoRetorno = calcularPisoANTT(entrada.distanciaKm, entrada.numeroEixos);
-  const pisoTotal = pisoRetorno * 2;
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={fechar}>
@@ -209,13 +207,13 @@ export function SimularRetornoModal({ visible, onClose, resultado }: Props) {
                     {calc.freteRetorno < pisoRetorno ? (
                       <View style={styles.pisoAlertaDanger}>
                         <Text style={styles.pisoAlertaDangerTexto}>
-                          ⚠️ O valor informado está abaixo do piso mínimo legal ({formatCurrency(pisoRetorno)}). Você pode exigir pelo menos esse valor.
+                          ⚠️ Frete de retorno abaixo do piso mínimo da ANTT ({formatCurrency(pisoRetorno)}). Você pode exigir pelo menos esse valor do embarcador.
                         </Text>
                       </View>
                     ) : (
                       <View style={styles.pisoAlertaSuccess}>
                         <Text style={styles.pisoAlertaSuccessTexto}>
-                          ✅ Valor acima do piso mínimo legal.
+                          ✅ Frete de retorno acima do piso mínimo legal ({formatCurrency(pisoRetorno)}).
                         </Text>
                       </View>
                     )}
@@ -236,22 +234,6 @@ export function SimularRetornoModal({ visible, onClose, resultado }: Props) {
                       : neutro
                       ? `Margem total ${fmtPct(calc.margemTotal)} — abaixo da meta de ${fmtPct(entrada.margemDesejada)}`
                       : `Margem negativa (${fmtPct(calc.margemTotal)}) — viagem dá prejuízo`;
-                    return (
-                      <View style={[styles.veredictoItem, s]}>
-                        <Text style={[styles.veredictoIcone, s]}>{icone}</Text>
-                        <Text style={[styles.veredictoTexto, s]}>{msg}</Text>
-                      </View>
-                    );
-                  })()}
-
-                  {/* Veredicto: piso ANTT viagem completa */}
-                  {(() => {
-                    const acima = calc.freteTotal >= pisoTotal;
-                    const s = acima ? styles.veredictoSucesso : styles.veredictoWarning;
-                    const icone = acima ? '✓' : '⚠';
-                    const msg = acima
-                      ? `Frete total acima do piso ANTT (${formatCurrency(pisoTotal)} p/ ${distTotal} km)`
-                      : `Frete total ${formatCurrency(calc.freteTotal)} abaixo do piso ANTT de ${formatCurrency(pisoTotal)}`;
                     return (
                       <View style={[styles.veredictoItem, s]}>
                         <Text style={[styles.veredictoIcone, s]}>{icone}</Text>
