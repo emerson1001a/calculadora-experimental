@@ -42,6 +42,8 @@ export interface Custos {
   pedagioVolta: number;
   alimentacao: number;
   pernoite: number;
+  estacionamento: number;
+  chapa: number;
   manutencaoPorKm: number;
   pneusPorKm: number;
   depreciacaoPorKm: number;
@@ -65,6 +67,8 @@ export interface CustoDetalhado {
   pedagio: number;
   alimentacao: number;
   pernoite: number;
+  estacionamento: number;
+  chapa: number;
   manutencao: number;
   pneus: number;
   depreciacao: number;

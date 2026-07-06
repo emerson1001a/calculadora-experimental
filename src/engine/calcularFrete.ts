@@ -19,6 +19,9 @@ export function calcularFrete(entrada: EntradaFrete): ResultadoFrete {
     : custos.pedagio + custos.pedagioVolta;
   const alimentacao = custos.alimentacao;
   const pernoite = custos.pernoite;
+  // Estacionamento e chapa são custos fixos da ida — não dobram na volta vazia
+  const estacionamento = custos.estacionamento;
+  const chapa = custos.chapa;
   const manutencao = custos.manutencaoPorKm * distanciaTotal;
   const pneus = custos.pneusPorKm * distanciaTotal;
   const depreciacao = custos.depreciacaoPorKm * distanciaTotal;
@@ -29,6 +32,8 @@ export function calcularFrete(entrada: EntradaFrete): ResultadoFrete {
     pedagio,
     alimentacao,
     pernoite,
+    estacionamento,
+    chapa,
     manutencao,
     pneus,
     depreciacao,

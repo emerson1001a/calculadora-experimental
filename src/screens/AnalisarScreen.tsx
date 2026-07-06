@@ -76,6 +76,8 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
   const [numeroDiarias, setNumeroDiarias] = useState('1');
   const [hospedagemPorDiaria, setHospedagemPorDiaria] = useState('80,00');
   const [alimentacaoPorDia, setAlimentacaoPorDia] = useState('60,00');
+  const [estacionamento, setEstacionamento] = useState('');
+  const [chapa, setChapa] = useState('');
   const [precoDiesel, setPrecoDiesel] = useState('6,50');
   const [precoArla, setPrecoArla] = useState('4,50');
 
@@ -207,11 +209,13 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
       diesel + arla + pedagioTotal
       + nDiarias * parseNumber(alimentacaoPorDia)
       + nDiarias * parseNumber(hospedagemPorDiaria)
+      + parseNumber(estacionamento)
+      + parseNumber(chapa)
       + (perfil?.manutencaoPorKm ?? 0) * distTotal
       + (perfil?.pneusPorKm ?? 0) * distTotal
       + (perfil?.depreciacaoPorKm ?? 0) * distTotal
     );
-  }, [perfil, distancia, tipoRetorno, precoDiesel, precoArla, pedagio, pedagioVolta, numeroDiarias, alimentacaoPorDia, hospedagemPorDiaria, consumoDiesel, consumoArla]);
+  }, [perfil, distancia, tipoRetorno, precoDiesel, precoArla, pedagio, pedagioVolta, numeroDiarias, alimentacaoPorDia, hospedagemPorDiaria, consumoDiesel, consumoArla, estacionamento, chapa]);
 
   const freteMinimo = useMemo<number | null>(() => {
     if (custoEstimado === null || margemNegociar >= 100) return null;
@@ -336,6 +340,8 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
         pedagioVolta: parseNumber(pedagioVolta),
         alimentacao: nDiarias * parseNumber(alimentacaoPorDia),
         pernoite: nDiarias * parseNumber(hospedagemPorDiaria),
+        estacionamento: parseNumber(estacionamento),
+        chapa: parseNumber(chapa),
         manutencaoPorKm: perfil?.manutencaoPorKm ?? 0,
         pneusPorKm: perfil?.pneusPorKm ?? 0,
         depreciacaoPorKm: perfil?.depreciacaoPorKm ?? 0,
@@ -673,6 +679,19 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
               onChangeText={v => setAlimentacaoPorDia(aplicarMaquininha(v, alimentacaoPorDia))}
               unit="R$/dia"
             />
+            <CustoRow
+              label="Estacionamento"
+              value={estacionamento}
+              onChangeText={v => setEstacionamento(aplicarMaquininha(v, estacionamento))}
+              unit="R$"
+            />
+            <CustoRow
+              label="Chapa"
+              value={chapa}
+              onChangeText={v => setChapa(aplicarMaquininha(v, chapa))}
+              unit="R$"
+            />
+            <Text style={styles.chapaHint}>Ajudantes de carga e descarga</Text>
 
             <Text style={styles.sectionLabel}>Combustível</Text>
             <CustoRow
@@ -1069,6 +1088,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800' as const,
     letterSpacing: 1.2,
+  },
+
+  chapaHint: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontStyle: 'italic' as const,
+    marginTop: -4,
+    marginBottom: 4,
+    paddingLeft: 2,
   },
 
   // Coach marks

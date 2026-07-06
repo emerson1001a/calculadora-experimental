@@ -133,7 +133,7 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
 
   const detalheAltura = detalheAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 380],
+    outputRange: [0, 440],
   });
   const detalheOpacidade = detalheAnim.interpolate({
     inputRange: [0, 0.4, 1],
@@ -322,6 +322,8 @@ export function ResultadoScreen({ resultado, onVoltar }: Props) {
             <LinhaDetalhe label="Pedágio" valor={custoDetalhado.pedagio} />
             <LinhaDetalhe label="Alimentação" valor={custoDetalhado.alimentacao} />
             <LinhaDetalhe label="Gasto extra" valor={custoDetalhado.pernoite} />
+            <LinhaDetalhe label="Estacionamento" valor={custoDetalhado.estacionamento} />
+            <LinhaDetalhe label="Chapa" valor={custoDetalhado.chapa} />
             <LinhaDetalhe label="Manutenção" valor={custoDetalhado.manutencao} />
             <LinhaDetalhe label="Pneus" valor={custoDetalhado.pneus} />
             <LinhaDetalhe label="Depreciação" valor={custoDetalhado.depreciacao} />

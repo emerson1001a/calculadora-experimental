@@ -12,14 +12,16 @@ interface Props {
 }
 
 const ITENS = [
-  { chave: 'diesel',       label: 'Diesel',       cor: '#F59B3A' },
-  { chave: 'arla',         label: 'Arla 32',      cor: '#26C6DA' },
-  { chave: 'pedagio',      label: 'Pedágio',      cor: '#4FC3F7' },
-  { chave: 'alimentacao',  label: 'Alimentação',  cor: '#81C784' },
-  { chave: 'pernoite',     label: 'Gasto extra',  cor: '#CE93D8' },
-  { chave: 'manutencao',   label: 'Manutenção',   cor: '#FFD54F' },
-  { chave: 'pneus',        label: 'Pneus',        cor: '#EF9A9A' },
-  { chave: 'depreciacao',  label: 'Depreciação',  cor: '#90A4AE' },
+  { chave: 'diesel',          label: 'Diesel',          cor: '#F59B3A' },
+  { chave: 'arla',            label: 'Arla 32',         cor: '#26C6DA' },
+  { chave: 'pedagio',         label: 'Pedágio',         cor: '#4FC3F7' },
+  { chave: 'alimentacao',     label: 'Alimentação',     cor: '#81C784' },
+  { chave: 'pernoite',        label: 'Gasto extra',     cor: '#CE93D8' },
+  { chave: 'estacionamento',  label: 'Estacionamento',  cor: '#FFCC80' },
+  { chave: 'chapa',           label: 'Chapa',           cor: '#BCAAA4' },
+  { chave: 'manutencao',      label: 'Manutenção',      cor: '#FFD54F' },
+  { chave: 'pneus',           label: 'Pneus',           cor: '#EF9A9A' },
+  { chave: 'depreciacao',     label: 'Depreciação',     cor: '#90A4AE' },
 ];
 
 function polarParaCartesiano(cx: number, cy: number, r: number, grau: number) {
