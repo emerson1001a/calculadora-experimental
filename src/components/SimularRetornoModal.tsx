@@ -85,7 +85,8 @@ export function SimularRetornoModal({ visible, onClose, resultado }: Props) {
 
   const podeProsseguir = parseNumber(valorFrete) > 0;
   const distTotal = entrada.distanciaKm * 2;
-  const pisoTotal = calcularPisoANTT(entrada.distanciaKm, entrada.numeroEixos) * 2;
+  const pisoRetorno = calcularPisoANTT(entrada.distanciaKm, entrada.numeroEixos);
+  const pisoTotal = pisoRetorno * 2;
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={fechar}>
@@ -184,6 +185,43 @@ export function SimularRetornoModal({ visible, onClose, resultado }: Props) {
                   <View style={styles.observacaoBox}>
                     <Text style={styles.observacaoTexto}>
                       💡 Os custos do retorno estão zerados porque você já os incluiu no cálculo do frete de ida com volta vazia. Qualquer valor que você receber nesse frete de retorno é lucro direto no bolso.
+                    </Text>
+                  </View>
+
+                  {/* Piso ANTT do trecho de retorno */}
+                  <View style={styles.pisoRetornoCard}>
+                    <View style={styles.pisoRetornoLucroRow}>
+                      <Text style={styles.pisoRetornoLucroLabel}>💰 Lucro extra</Text>
+                      <Text style={styles.pisoRetornoLucroValor}>{formatCurrency(calc.freteRetorno)}</Text>
+                    </View>
+                    <Text style={styles.pisoRetornoDesc}>
+                      Você já pagou essa volta no frete de ida. Esse valor é lucro direto no bolso.
+                    </Text>
+
+                    <View style={styles.pisoRetornoSeparador} />
+
+                    <Text style={styles.pisoRetornoAnttLabel}>⚖️ Piso mínimo ANTT para esse trecho</Text>
+                    <Text style={styles.pisoRetornoAnttValor}>{formatCurrency(pisoRetorno)}</Text>
+                    <Text style={styles.pisoRetornoDesc}>
+                      O embarcador é obrigado por lei a pagar pelo menos esse valor. Você tem direito a negociar acima do piso.
+                    </Text>
+
+                    {calc.freteRetorno < pisoRetorno ? (
+                      <View style={styles.pisoAlertaDanger}>
+                        <Text style={styles.pisoAlertaDangerTexto}>
+                          ⚠️ O valor informado está abaixo do piso mínimo legal ({formatCurrency(pisoRetorno)}). Você pode exigir pelo menos esse valor.
+                        </Text>
+                      </View>
+                    ) : (
+                      <View style={styles.pisoAlertaSuccess}>
+                        <Text style={styles.pisoAlertaSuccessTexto}>
+                          ✅ Valor acima do piso mínimo legal.
+                        </Text>
+                      </View>
+                    )}
+
+                    <Text style={styles.pisoDisclaimer}>
+                      Ref: Portaria SUROC Nº 4/2026 — O piso é referência regulatória, não aconselhamento jurídico.
                     </Text>
                   </View>
 
@@ -440,5 +478,82 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '600' as const,
+  },
+
+  // Bloco piso ANTT retorno
+  pisoRetornoCard: {
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 14,
+    gap: 8,
+  },
+  pisoRetornoLucroRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+  },
+  pisoRetornoLucroLabel: {
+    color: colors.success,
+    fontSize: 14,
+    fontWeight: '700' as const,
+  },
+  pisoRetornoLucroValor: {
+    color: colors.success,
+    fontSize: 18,
+    fontWeight: '800' as const,
+  },
+  pisoRetornoDesc: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  pisoRetornoSeparador: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: 4,
+  },
+  pisoRetornoAnttLabel: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '700' as const,
+  },
+  pisoRetornoAnttValor: {
+    color: colors.primary,
+    fontSize: 20,
+    fontWeight: '800' as const,
+  },
+  pisoAlertaDanger: {
+    backgroundColor: colors.dangerBg,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    padding: 10,
+  },
+  pisoAlertaDangerTexto: {
+    color: colors.danger,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '600' as const,
+  },
+  pisoAlertaSuccess: {
+    backgroundColor: colors.successBg,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.success,
+    padding: 10,
+  },
+  pisoAlertaSuccessTexto: {
+    color: colors.success,
+    fontSize: 12,
+    fontWeight: '600' as const,
+  },
+  pisoDisclaimer: {
+    color: colors.textMuted,
+    fontSize: 10,
+    lineHeight: 14,
+    fontStyle: 'italic' as const,
+    marginTop: 2,
   },
 });
