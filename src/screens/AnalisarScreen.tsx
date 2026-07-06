@@ -74,8 +74,8 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
   const [pedagio, setPedagio] = useState('150,00');
   const [pedagioVolta, setPedagioVolta] = useState('150,00');
   const [numeroDiarias, setNumeroDiarias] = useState('1');
-  const [hospedagemPorDiaria, setHospedagemPorDiaria] = useState('80,00');
-  const [alimentacaoPorDia, setAlimentacaoPorDia] = useState('60,00');
+  const [hospedagemPorDiaria, setHospedagemPorDiaria] = useState('');
+  const [alimentacaoPorDia, setAlimentacaoPorDia] = useState('');
   const [estacionamento, setEstacionamento] = useState('');
   const [chapa, setChapa] = useState('');
   const [precoDiesel, setPrecoDiesel] = useState('6,50');
