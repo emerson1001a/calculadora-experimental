@@ -646,7 +646,7 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
 
             <Text style={styles.sectionLabel}>Pedágio</Text>
             <CustoRow
-              label="Pedágio (ida)"
+              label="Pedágio"
               value={pedagio}
               onChangeText={v => setPedagio(aplicarMaquininha(v, pedagio))}
               unit="R$"
@@ -691,8 +691,6 @@ export function AnalisarScreen({ onCalcular, onEditarPerfil }: Props) {
               onChangeText={v => setChapa(aplicarMaquininha(v, chapa))}
               unit="R$"
             />
-            <Text style={styles.chapaHint}>Ajudantes de carga e descarga</Text>
-
             <Text style={styles.sectionLabel}>Combustível</Text>
             <CustoRow
               label="Preço do diesel"
@@ -1088,15 +1086,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800' as const,
     letterSpacing: 1.2,
-  },
-
-  chapaHint: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontStyle: 'italic' as const,
-    marginTop: -4,
-    marginBottom: 4,
-    paddingLeft: 2,
   },
 
   // Coach marks
